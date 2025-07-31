@@ -1,0 +1,13 @@
+.application-details-container {
+    padding: 20px;
+  }
+  
+  textarea {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  button {
+    margin-top: 10px;
+  }
+  

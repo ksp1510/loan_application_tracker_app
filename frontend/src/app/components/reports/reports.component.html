@@ -1,0 +1,8 @@
+<div class="reports-container">
+    <h1>Reports</h1>
+    <button (click)="generateReport()">Generate Report</button>
+    <div *ngIf="report">
+      <pre>{{ report | json }}</pre>
+    </div>
+  </div>
+  
