@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 from config import db
 
-def calculate_payment_date(application_id: str):
-    application = db.applications.find_one({"_id": application_id})
+async def calculate_payment_date(application_id: str):
+    application = await db.applications.find_one({"_id": application_id})
     if not application:
         return {"error": "Application not found"}
     
