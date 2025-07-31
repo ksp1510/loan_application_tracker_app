@@ -35,14 +35,24 @@ async def update_application(app_id: str, update_data: LoanApplicationUpdate):
         raise HTTPException(status_code=404, detail="Application not found")
     return {"message": "Application updated"}
 
-def upload_application_file(db, application_id: str, file, applicant_last_name: str):
+def upload_application_file(db, application_id: str, file):
     application = db["applications"].find_one({"_id": ObjectId(application_id)})
     if not application:
         raise ValueError("Application not found")
+    applicant_last_name = application.get("main_applicant", {}).get("last_name")
+    if not applicant_last_name:
+        raise ValueError("Applicant last name is missing or invalid")
     return save_file(application_id, file, applicant_last_name)
 
-def download_application_file(application_id: str, filename: str, applicant_last_name: str):
+def download_application_file(db, application_id: str, filename: str):
+    application = db["applications"].find_one({"_id": ObjectId(application_id)})
+    if not application:
+        raise ValueError("Application not found")
+    applicant_last_name = application.get("main_applicant", {}).get("last_name")
+    if not applicant_last_name:
+        raise ValueError("Applicant last name is missing or invalid")
     return get_file_response(application_id, filename, applicant_last_name)
+
 
 
 

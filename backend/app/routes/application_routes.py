@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, UploadFile, File, Depends
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Depends
 from typing import List, Optional
 from app.services import application_service
 from app.models.model import LoanApplicationBase, LoanApplicationUpdate
@@ -24,12 +24,18 @@ def update_application(app_id: str, application_update: LoanApplicationUpdate):
     return application_service.update_application(app_id, application_update)
 
 @router.post("/applications/{id}/upload")
-async def upload_file(id: str, applicant_last_name: str, file: UploadFile = File(...), db=Depends(get_db)):
-    return application_service.upload_application_file(db, id, file, applicant_last_name)
+async def upload_file(id: str, file: UploadFile = File(...), db=Depends(get_db)):
+    try:
+        return application_service.upload_application_file(db, id, file)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/applications/{id}/files/{filename}")
-async def download_file(id: str, filename: str, applicant_last_name: str):
-    return application_service.download_application_file(id, filename, applicant_last_name)
+async def download_file(id: str, filename: str, db=Depends(get_db)):
+    try:
+        return application_service.download_application_file(db, id, filename)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/reports")
 def generate_report(
