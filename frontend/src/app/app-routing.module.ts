@@ -5,7 +5,7 @@ import { ApplicationDetailsComponent } from './components/application-details/ap
 import { ReportsComponent } from './components/reports/reports.component';
 import { AddApplicationComponent } from './components/add-application/add-application.component';
 
-const routes: Routes = [
+export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: 'dashboard', component: DashboardComponent },
   { path: 'application/:id', component: ApplicationDetailsComponent },
