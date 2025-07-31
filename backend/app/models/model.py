@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from typing import Optional, List
 from datetime import datetime
 import re
@@ -11,8 +11,9 @@ class Address(BaseModel):
     province: str
     postal_code: str
 
+    @field_validator('postal_code')
     @classmethod
-    def validate_postal_code(cls, v: str) -> str:
+    def validate_postal_code(cls, v):
         if not re.match(r"^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$", v):
             raise ValueError("Invalid Canadian postal code format.")
         return v
@@ -91,6 +92,13 @@ class Applicant(BaseModel):
     monthly_expenses: Optional[FinancialInfo] = None
     monthly_income: Optional[Income] = None
     loan: Optional[List[Loan]] = []
+
+    @field_validator('cell_phone')
+    @classmethod
+    def validate_phone(cls, v):
+        if not re.match(r'^\d{3}-\d{3}-\d{4}$', v.replace(' ', '').replace('(', '').replace(')', '').replace('.', '').replace('-', '')):
+            raise ValueError("Invalid phone number format. Example: 416-555-1234")
+        return v
 
 
 # Loan Application Base

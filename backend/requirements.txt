@@ -1,5 +1,5 @@
 fastapi
-pymongo
+motor
 uvicorn
 python-dotenv
 python-multipart
