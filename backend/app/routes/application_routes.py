@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse
 import os
 import boto3 # type: ignore
 from datetime import datetime, timedelta
-from app.models.loan_application import LoanApplication
+from backend.app.models.model import LoanApplication
 from app.config import table
 
 router = APIRouter()

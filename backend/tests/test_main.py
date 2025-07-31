@@ -1,7 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from app.main import app
-from app.models.loan_application import LoanApplication
+from backend.app.models.model import LoanApplication
 from datetime import datetime, timedelta
 
 @pytest.mark.asyncio
