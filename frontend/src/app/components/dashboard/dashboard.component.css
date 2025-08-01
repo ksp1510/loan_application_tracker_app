@@ -1,0 +1,47 @@
+.dashboard-container {
+    padding: 20px;
+  }
+  
+  .summary-cards {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  
+  .summary-card {
+    flex: 1 1 200px;
+    color: #fff;
+  }
+  
+  .summary-card mat-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .search-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .search-field {
+    width: 300px;
+  }
+  
+  .total-count {
+    font-weight: 500;
+    margin-left: auto;
+  }
+  
+  .table-container {
+    overflow: auto;
+  }
+  
+  mat-paginator {
+    margin-top: 10px;
+  }
+  

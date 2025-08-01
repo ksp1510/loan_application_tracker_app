@@ -1,0 +1,58 @@
+
+.reports-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+mat-card {
+  padding: 16px;
+}
+
+mat-form-field {
+  width: 100%;
+  max-width: 300px;
+  margin-right: 16px;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+button {
+  margin-right: 8px;
+}
+
+mat-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+mat-header-cell, mat-cell {
+  padding: 12px;
+  font-size: 14px;
+}
+
+.download-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.status-funded { color: green; font-weight: 600; }
+.status-declined { color: red; font-weight: 600; }
+.status-applied { color: orange; font-weight: 600; }
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  gap: 1rem;
+}
+
+

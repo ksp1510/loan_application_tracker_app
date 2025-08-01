@@ -1,6 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { HttpEventType } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 // Make sure the path is correct; if the service is in 'src/app/services/', use:
 import { ApplicationService } from '../../services/application.service';
 import { FileUploadService } from '../../services/file-upload.service';
@@ -22,7 +23,8 @@ export class ApplicationDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private applicationService: ApplicationService,
-    private fileService: FileUploadService
+    private fileService: FileUploadService,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -46,13 +48,17 @@ export class ApplicationDetailsComponent implements OnInit {
         if (event.type === HttpEventType.UploadProgress && event.total) {
           this.uploadProgress = Math.round((100 * event.loaded) / event.total);
         } else if (event.type === HttpEventType.Response) {
-          alert('File uploaded successfully!');
+          this.snackBar.open('File uploaded successfully!', 'Close', {
+            duration: 3000
+          });
           this.uploadProgress = 0;
           this.selectedFile = null;
           this.loadUploadedFiles();
         }
       }, error => {
-        alert('File upload failed.');
+        this.snackBar.open('File upload failed.', 'Close', {
+          duration: 3000
+        });
       });
     }
   }
@@ -66,14 +72,22 @@ export class ApplicationDetailsComponent implements OnInit {
       a.click();
       window.URL.revokeObjectURL(url);
     }, error => {
-      alert('Failed to download file.');
+      this.snackBar.open('Failed to download file.', 'Close', {
+        duration: 3000
+      });
     });
   }
 
   loadUploadedFiles(): void {
-    // This should ideally call a backend endpoint to list uploaded files.
-    // Currently left as a placeholder.
-    // this.uploadedFiles = ["sample_contract.pdf", "proof_of_income.pdf"];
+    if (this.applicationId) {
+      this.fileService.getUploadedFiles(this.applicationId).subscribe(files => {
+        this.uploadedFiles = files;
+      }, error => {
+        this.snackBar.open('Failed to load uploaded files.', 'Close', {
+          duration: 3000
+        });
+      });
+    }
   }
 
 

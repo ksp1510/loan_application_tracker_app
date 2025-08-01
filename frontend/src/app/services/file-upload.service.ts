@@ -28,4 +28,9 @@ export class FileUploadService {
       responseType: 'blob'
     });
   }
+
+  getUploadedFiles(applicationId: string): Observable<string[]> {
+    return this.http.get<string[]>(`${this.baseUrl}/applications/${applicationId}/files`);
+  }
+
 }
