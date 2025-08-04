@@ -10,3 +10,5 @@ pandas
 pymongo
 pydantic
 reportlab
+pyjwt
+pyotp
