@@ -5,7 +5,7 @@ import { ApplicationService } from '../../services/application.service';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { MatPaginator } from '@angular/material/paginator';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { DatePipe } from '@angular/common';
@@ -71,8 +71,9 @@ export class ReportsComponent implements OnInit {
     });
   }
 
-  onPageChange(page: number): void {
-    this.currentPage = page;
+  onPageChange(event: PageEvent): void {
+    this.currentPage = event.pageIndex + 1; // PageEvent uses 0-based indexing, convert to 1-based
+    this.pageSize = event.pageSize;
     this.applyFilter();
   }
 
@@ -117,4 +118,4 @@ export class ReportsComponent implements OnInit {
 
     doc.save('loan_report.pdf');
   }
-  }
+}

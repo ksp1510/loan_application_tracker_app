@@ -1,0 +1,233 @@
+/* add-application.component.css */
+
+.form-container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+}
+
+.form-card {
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  background-color: #ffffff;
+  border-radius: 10px;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+}
+
+.form-card:hover {
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  transform: translateY(-2px);
+}
+
+.summary-row.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.half-width {
+  width: 48%;
+}
+
+.section-card {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fafafa;
+  animation: fadeIn 0.5s ease-in-out;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.section-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+}
+
+.section-title {
+  font-size: 1.25rem;
+  margin-bottom: 15px;
+  color: #3f51b5;
+  font-weight: 600;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+mat-form-field {
+  flex: 1 1 200px;
+  min-width: 250px;
+}
+
+/* Angular standard validation styling */
+mat-form-field.ng-invalid.ng-touched .mat-mdc-form-field-flex {
+  border-left: 4px solid #e53935;
+  padding-left: 10px;
+  background-color: #fff3f3;
+}
+
+mat-form-field.ng-valid.ng-touched .mat-mdc-form-field-flex {
+  border-left: 4px solid #4caf50;
+  padding-left: 8px;
+}
+
+.form-actions {
+  margin-top: 30px;
+  margin-bottom: 30px;
+  padding-top: 20px;
+  text-align: right;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 16px;
+  align-items: center;
+}
+
+button[mat-raised-button] {
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+  background-color: #3f51b5;
+  border-radius: 6px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+button[mat-raised-button]:hover {
+  background-color: #303f9f;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+button[mat-button] {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3f51b5;
+}
+
+button[mat-button]:hover {
+  color: #303f9f;
+  text-decoration: underline;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:host ::ng-deep .mat-card-content {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Reusable Applicant Form Styling */
+.applicant-section {
+  border: 1px solid #cfd8dc;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 20px;
+  margin-top: 24px;
+  animation: fadeIn 0.6s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+  transition: box-shadow 0.3s ease;
+}
+
+.applicant-section:hover {
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+
+.applicant-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c387e;
+  margin-bottom: 16px;
+}
+
+/* Co-applicant toggle styling */
+.co-applicant-toggle {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+  font-weight: 500;
+  color: #3f3f3f;
+}
+
+.co-applicant-toggle mat-slide-toggle {
+  margin-left: 12px;
+}
+
+/* Reapply validation styling to nested applicant form fields */
+app-applicant-form mat-form-field.ng-invalid.ng-touched .mat-mdc-form-field-flex {
+  border-left: 4px solid #e53935;
+  padding-left: 10px;
+  background-color: #fff3f3;
+}
+
+app-applicant-form mat-form-field.ng-valid.ng-touched .mat-mdc-form-field-flex {
+  border-left: 4px solid #4caf50;
+  padding-left: 8px;
+}
+
+/* Tooltip styling */
+[matTooltip] {
+  cursor: help;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .half-width {
+    width: 100%;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card-grid {
+    flex-direction: column;
+  }
+
+  .mat-card {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .form-container, .form-card, .section-card {
+    padding: 16px;
+  }
+
+  .form-row, .form-actions {
+    gap: 12px;
+  }
+
+  mat-form-field {
+    min-width: 100%;
+  }
+}
+
+/* Hover styles matching dashboard/reports */
+button:hover, input:focus, mat-form-field:hover .mat-mdc-form-field-flex {
+  transition: all 0.3s ease-in-out;
+  outline: none;
+  box-shadow: 0 0 4px rgba(63, 81, 181, 0.4);
+}

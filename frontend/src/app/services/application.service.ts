@@ -66,6 +66,19 @@ export class ApplicationService {
     return this.http.get<any>(`${this.baseUrl}/applications/report`, { params });
   }
   
+  getPaginatedApplications(startDate: string, endDate: string, status: string, page: number, pageSize: number): Observable<any> {
+    let params = new HttpParams()
+      .set('start_date', startDate)
+      .set('end_date', endDate)
+      .set('page', page.toString())
+      .set('page_size', pageSize.toString());
+
+    if (status) {
+      params = params.set('status', status);
+    }
+
+    return this.http.get<any>(`${this.baseUrl}/report`, { params });
+  }
 
   getReport(filters: any): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/applications/reports`, {

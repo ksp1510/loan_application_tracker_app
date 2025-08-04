@@ -1,17 +1,13 @@
 <div class="dashboard-container">
 
   <!-- Summary Cards -->
-  <div class="summary-cards">
-    <mat-card class="summary-card" *ngFor="let card of summaryCards" [ngStyle]="{ 'background-color': card.color }">
-      <mat-card-header>
-        <mat-icon>{{ card.icon }}</mat-icon>
-        <mat-card-title>{{ card.title }}</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <h2>{{ card.count }}</h2>
-      </mat-card-content>
-    </mat-card>
-  </div>
+  <mat-card class="card-highlight" *ngFor="let card of summaryCards" [style.borderLeftColor]="getStatusColor(card.title)">
+    <mat-icon class="dashboard-icon">{{ card.icon }}</mat-icon>
+    <div class="card-content">
+      <h2>{{ card.title }}</h2>
+      <p>{{ card.count }}</p>
+    </div>
+  </mat-card>
 
   <!-- Search Bar -->
   <div class="search-bar">
@@ -23,40 +19,50 @@
     <div class="total-count">Total: {{ totalItems }}</div>
   </div>
 
-  <!-- Application Table -->
-  <div class="table-container">
-    <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+  <!-- Applications Table -->
+  <mat-card class="table-card card-highlight">
+    <mat-card-title>Recent Applications</mat-card-title>
 
-      <!-- Applicant Name Column -->
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z2" matSort>
+
+      <!-- Applicant -->
       <ng-container matColumnDef="applicant">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Applicant</th>
-        <td mat-cell *matCellDef="let row">{{ row.main_applicant.first_name }} {{ row.main_applicant.last_name }}</td>
+        <td mat-cell *matCellDef="let row">
+          {{ row.main_applicant?.first_name }} {{ row.main_applicant?.last_name }}
+        </td>
       </ng-container>
 
       <!-- Amount -->
       <ng-container matColumnDef="amount">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Amount</th>
-        <td mat-cell *matCellDef="let row">${{ row.amount | number }}</td>
+        <td mat-cell *matCellDef="let row">
+          ${{ row.amount | number }}
+        </td>
       </ng-container>
 
       <!-- Security -->
       <ng-container matColumnDef="security">
         <th mat-header-cell *matHeaderCellDef>Security</th>
-        <td mat-cell *matCellDef="let row">{{ row.security }}</td>
+        <td mat-cell *matCellDef="let row">
+          {{ row.security }}
+        </td>
       </ng-container>
 
       <!-- Status -->
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
         <td mat-cell *matCellDef="let row">
-          <span [ngStyle]="{ color: getStatusColor(row.status) }">{{ row.status }}</span>
+          <span [ngClass]="getStatusColor(row.status)">{{ row.status }}</span>
         </td>
       </ng-container>
 
-      <!-- Application Date -->
+      <!-- Date -->
       <ng-container matColumnDef="application_date">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
-        <td mat-cell *matCellDef="let row">{{ row.application_date | date:'mediumDate' }}</td>
+        <td mat-cell *matCellDef="let row">
+          {{ row.application_date | date:'mediumDate' }}
+        </td>
       </ng-container>
 
       <!-- Actions -->
@@ -72,11 +78,13 @@
         </td>
       </ng-container>
 
+      <!-- Render Table -->
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
 
+    <!-- Paginator -->
     <mat-paginator [pageSize]="10" showFirstLastButtons></mat-paginator>
-  </div>
+  </mat-card>
 
 </div>
