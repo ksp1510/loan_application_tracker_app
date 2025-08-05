@@ -96,9 +96,11 @@ class Applicant(BaseModel):
     @field_validator('cell_phone')
     @classmethod
     def validate_phone(cls, v):
-        if not re.match(r'^\d{3}-\d{3}-\d{4}$', v.replace(' ', '').replace('(', '').replace(')', '').replace('.', '').replace('-', '')):
+        cleaned = re.sub(r'[\s().-]', '', v)
+        if not re.match(r'^\d{10}$', cleaned):
             raise ValueError("Invalid phone number format. Example: 416-555-1234")
-        return v
+        return v  
+
 
 
 # Loan Application Base

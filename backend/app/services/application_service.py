@@ -29,7 +29,7 @@ async def create_application(application: LoanApplicationBase):
     result = await db.applications.insert_one(application_dict)
     return {"id": str(result.inserted_id)}
 
-async def update_application(app_id: str, update_data: LoanApplicationUpdate):
+async def update_application(app_id: ObjectId, update_data: LoanApplicationUpdate):
     result = await db.applications.update_one({"_id": app_id}, {"$set": update_data.dict(exclude_unset=True)})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Application not found")

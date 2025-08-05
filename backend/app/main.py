@@ -9,6 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 app = FastAPI()
+
+app.include_router(router, prefix="", tags=["Applications"])
 # Allow Angular dev server origin and any others as needed
 app.add_middleware(
     CORSMiddleware,
