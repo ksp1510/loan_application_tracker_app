@@ -5,6 +5,8 @@ from app.models.model import LoanApplicationBase, LoanApplicationUpdate
 from app.utils.db.mongodb import get_db
 from app.utils.file_handler import s3_client, S3_BUCKET
 from datetime import datetime
+from app.constants import FileType
+from typing import List
 
 router = APIRouter()
 
@@ -26,11 +28,20 @@ async def update_application(app_id: str, application_update: LoanApplicationUpd
     return await application_service.update_application(app_id, application_update)
 
 @router.post("/applications/{id}/upload")
-async def upload_file(id: str, file: UploadFile = File(...), db=Depends(get_db)):
-    try:
-        return await application_service.upload_application_file(db, id, file)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+async def upload_file(
+    id: str,
+    file: UploadFile = File(...),
+    file_type: FileType = Query(...)
+):
+    return await application_service.upload_application_file(id, file, file_type)
+
+@router.post("/applications/{id}/upload-multiple")
+async def upload_multiple_files(
+    id: str,
+    file_type: FileType = Query(...),
+    files: List[UploadFile] = File(...)
+):
+    return await application_service.upload_multiple_files(id, files, file_type)
 
 @router.get("/applications/{id}/files/{filename}")
 async def download_file(id: str, filename: str, db=Depends(get_db)):

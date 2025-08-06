@@ -7,6 +7,10 @@ from app.utils.db.mongodb import db
 from app.utils.file_handler import save_file, get_file_response
 from app.utils.reports.generator import generate_excel_report, generate_pdf_report
 from app.utils.helpers import serialize_document
+from app.constants import FileType
+from typing import List
+from app.utils.file_handler import validate_file_type
+
 
 async def get_applications(status: Optional[str] = None):
     query = {"status": status} if status else {}
@@ -36,14 +40,35 @@ async def update_application(app_id: str, update_data: LoanApplicationUpdate):
         raise HTTPException(status_code=404, detail="Application not found")
     return {"message": "Application updated"}
 
-async def upload_application_file(db, application_id: str, file):
-    application = db["applications"].find_one({"_id": ObjectId(application_id)})
+async def upload_application_file(app_id: str, file: UploadFile, file_type: FileType):
+    application = await db.applications.find_one({"_id": ObjectId(app_id)})
     if not application:
-        raise ValueError("Application not found")
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    applicant_last_name = application.get("main_applicant", {}).get("last_name", "unknown")
+    applicant_first_name = application.get("main_applicant", {}).get("first_name", "unknown")
+
+    return save_file(app_id, file, applicant_last_name, applicant_first_name, file_type)
+
+
+async def upload_multiple_files(id: str, files: List[UploadFile], file_type: FileType):
+    application = await db.applications.find_one({"_id": ObjectId(id)})
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+
     applicant_last_name = application.get("main_applicant", {}).get("last_name")
-    if not applicant_last_name:
-        raise ValueError("Applicant last name is missing or invalid")
-    return save_file(application_id, file, applicant_last_name)
+    applicant_first_name = application.get("main_applicant", {}).get("first_name")
+    responses = []
+
+    for file in files:
+        validate_file_type(file)
+        response = save_file(id, file, applicant_last_name, applicant_first_name, file_type)
+        responses.append(response)
+
+    return {"uploaded": responses}
+
+
+
 
 async def download_application_file(db, application_id: str, filename: str):
     application = db["applications"].find_one({"_id": ObjectId(application_id)})

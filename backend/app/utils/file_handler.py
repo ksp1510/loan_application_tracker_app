@@ -5,17 +5,34 @@ from fastapi.responses import StreamingResponse
 from botocore.exceptions import BotoCoreError, ClientError
 import uuid
 import io
+from app.constants import FileType
 
 s3_client = boto3.client("s3")
 S3_BUCKET = os.getenv("S3_BUCKET", "loan-applications-bucket")
 
-def save_file(app_id: str, file: UploadFile, applicant_last_name: str):
+ALLOWED_MIME_TYPES = {"application/pdf", "image/png", "image/jpeg"}
+
+def validate_file_type(file: UploadFile):
+    if file.content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type: {file.content_type}. Allowed types: {', '.join(ALLOWED_MIME_TYPES)}"
+        )
+
+def save_file(app_id: str, file: UploadFile, applicant_last_name: str, applicant_first_name: str, file_type: FileType):
     try:
-        key = f"{applicant_last_name}/{app_id}/{file.filename}"
+        applicant_name = f"{applicant_last_name.lower()}_{applicant_first_name.lower()}"
+        key = f"{applicant_name}_{app_id}/{file_type.value}"  # file_type is used as filename
         s3_client.upload_fileobj(file.file, S3_BUCKET, key)
-        return {"message": "File uploaded successfully", "filename": file.filename, "s3_key": key}
+        return {
+            "message": "File uploaded successfully",
+            "filename": file_type.value,
+            "s3_key": key
+        }
     except (BotoCoreError, ClientError) as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
 
 def get_file_response(app_id: str, filename: str, applicant_last_name: str):
     try:
