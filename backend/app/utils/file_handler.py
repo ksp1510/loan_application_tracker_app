@@ -4,13 +4,28 @@ from fastapi import UploadFile, HTTPException
 from fastapi.responses import StreamingResponse
 from botocore.exceptions import BotoCoreError, ClientError
 import uuid
+from dotenv import load_dotenv
 import io
 from app.constants import FileType
 
+
+load_dotenv()
+
+
 s3_client = boto3.client("s3")
-S3_BUCKET = os.getenv("S3_BUCKET", "loan-applications-bucket")
+S3_BUCKET = os.getenv("S3_BUCKET")
 
 ALLOWED_MIME_TYPES = {"application/pdf", "image/png", "image/jpeg"}
+
+
+
+
+# add this helper so routes/services never handcraft prefixes
+def s3_folder_prefix(app_id: str, last_name: str, first_name: str) -> str:
+    safe_last = (last_name or "unknown").strip().lower().replace(" ", "_")
+    safe_first = (first_name or "unknown").strip().lower().replace(" ", "_")
+    return f"{safe_last}_{safe_first}_{app_id}/"
+
 
 # app/utils/validators.py
 

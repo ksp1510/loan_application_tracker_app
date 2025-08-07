@@ -9,7 +9,7 @@ from app.utils.reports.generator import generate_excel_report, generate_pdf_repo
 from app.utils.helpers import serialize_document
 from app.constants import FileType
 from typing import List
-from app.utils.file_handler import validate_file_type
+from app.utils.file_handler import validate_file_type,s3_folder_prefix
 
 
 async def get_applications(status: Optional[str] = None):
@@ -90,6 +90,51 @@ async def download_application_file(db, application_id: str, filename: str):
     return get_file_response(application_id, filename, applicant_last_name)
 
 
+async def list_application_files(db, application_id: str, file_type: Optional[str] = None) -> List[str]:
+    # 1) get applicant names to build the correct S3 folder
+    app_doc = await db.applications.find_one({"_id": ObjectId(application_id)})
+    if not app_doc:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    first_name = app_doc.get("main_applicant", {}).get("first_name", "unknown")
+    last_name  = app_doc.get("main_applicant", {}).get("last_name", "unknown")
+
+    prefix = s3_folder_prefix(application_id, last_name, first_name)
+
+    # 2) list with pagination
+    keys: List[str] = []
+    continuation_token = None
+
+    try:
+        while True:
+            kwargs = {"Bucket": S3_BUCKET, "Prefix": prefix}
+            if continuation_token:
+                kwargs["ContinuationToken"] = continuation_token
+
+            resp = s3_client.list_objects_v2(**kwargs)
+            contents = resp.get("Contents", [])
+            for obj in contents:
+                key = obj.get("Key", "")
+                if not key or not key.startswith(prefix):
+                    continue
+                filename = key[len(prefix):]  # strip folder path -> "contract.pdf"
+                if not filename:
+                    continue
+                if file_type:
+                    # allow both with or without .pdf
+                    if not (filename == f"{file_type}.pdf" or filename == file_type):
+                        continue
+                keys.append(filename)
+
+            if resp.get("IsTruncated"):
+                continuation_token = resp.get("NextContinuationToken")
+            else:
+                break
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error listing S3 files: {str(e)}")
+
+    return keys
 
 
 async def generate_report(start_date, end_date, status, format):

@@ -2,12 +2,11 @@ from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Depends
 from typing import List, Optional
 from app.services import application_service
 from app.models.model import LoanApplicationBase, LoanApplicationUpdate
-from app.utils.db.mongodb import get_db
-from app.utils.file_handler import s3_client, S3_BUCKET, get_file_response
+from app.utils.file_handler import get_file_response,s3_folder_prefix,s3_client,S3_BUCKET
 from datetime import datetime
 from app.constants import FileType
 from typing import List
-from app.utils.db.mongodb import db
+from app.utils.db.mongodb import get_db
 from bson import ObjectId
 from fastapi.responses import StreamingResponse
 
@@ -81,16 +80,30 @@ async def download_file(
     
 
 @router.get("/applications/{application_id}/files", response_model=List[str])
-async def list_files(application_id: str):
+async def list_files(application_id: str, db=Depends(get_db)):
     try:
-        prefix = f"{application_id}/"
+        # Get applicant names from DB
+        application = await db.applications.find_one({"_id": ObjectId(application_id)})
+        if not application:
+            raise HTTPException(status_code=404, detail="Application not found")
+
+        last_name = application.get("main_applicant", {}).get("last_name", "unknown").lower()
+        first_name = application.get("main_applicant", {}).get("first_name", "unknown").lower()
+
+        applicant_name = f"{last_name}_{first_name}"
+        prefix = f"{applicant_name}_{application_id}/"
+
         response = s3_client.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix)
+
         if "Contents" not in response:
             return []
-        filenames = [obj["Key"].split("/", 1)[-1] for obj in response["Contents"] if "/" in obj["Key"]]
+
+        filenames = [obj["Key"].split("/", 1)[-1] for obj in response["Contents"]]
         return filenames
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error listing files: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error listing S3 files: {str(e)}")
+
 
 
 @router.get("/report")
