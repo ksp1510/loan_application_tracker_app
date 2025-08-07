@@ -2,6 +2,11 @@ from fastapi import FastAPI
 import logging
 from app.routes.application_routes import router
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+from app.utils.db.mongodb import get_db
+
+
+load_dotenv()
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")

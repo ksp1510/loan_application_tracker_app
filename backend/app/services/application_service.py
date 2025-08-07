@@ -51,18 +51,28 @@ async def upload_application_file(app_id: str, file: UploadFile, file_type: File
     return save_file(app_id, file, applicant_last_name, applicant_first_name, file_type)
 
 
-async def upload_multiple_files(id: str, files: List[UploadFile], file_type: FileType):
+async def upload_multiple_files(
+    id: str, files_map :dict):
     application = await db.applications.find_one({"_id": ObjectId(id)})
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
 
     applicant_last_name = application.get("main_applicant", {}).get("last_name")
     applicant_first_name = application.get("main_applicant", {}).get("first_name")
+
     responses = []
 
-    for file in files:
+    for file_type, file in files_map.items():
+        if file is None:
+            continue
         validate_file_type(file)
-        response = save_file(id, file, applicant_last_name, applicant_first_name, file_type)
+        response = save_file(
+            app_id=id,
+            file=file,
+            applicant_last_name=applicant_last_name,
+            applicant_first_name=applicant_first_name,
+            file_type=file_type
+        )
         responses.append(response)
 
     return {"uploaded": responses}

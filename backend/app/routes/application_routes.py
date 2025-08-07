@@ -3,10 +3,13 @@ from typing import List, Optional
 from app.services import application_service
 from app.models.model import LoanApplicationBase, LoanApplicationUpdate
 from app.utils.db.mongodb import get_db
-from app.utils.file_handler import s3_client, S3_BUCKET
+from app.utils.file_handler import s3_client, S3_BUCKET, get_file_response
 from datetime import datetime
 from app.constants import FileType
 from typing import List
+from app.utils.db.mongodb import db
+from bson import ObjectId
+from fastapi.responses import StreamingResponse
 
 router = APIRouter()
 
@@ -35,20 +38,46 @@ async def upload_file(
 ):
     return await application_service.upload_application_file(id, file, file_type)
 
-@router.post("/applications/{id}/upload-multiple")
-async def upload_multiple_files(
+# app/routes/application_routes.py
+@router.post("/applications/{id}/upload-multi-type")
+async def upload_multi_type_files(
     id: str,
-    file_type: FileType = Query(...),
-    files: List[UploadFile] = File(...)
+    contract: Optional[UploadFile] = File(None),
+    proof_of_address: Optional[UploadFile] = File(None),
+    additional_doc: Optional[UploadFile] = File(None),
+    id_proof: Optional[UploadFile] = File(None),
+    bank_statement: Optional[UploadFile] = File(None),
+    pay_stub: Optional[UploadFile] = File(None),
+    photo_id: Optional[UploadFile] = File(None),
 ):
-    return await application_service.upload_multiple_files(id, files, file_type)
+    files_map = {
+        FileType.contract: contract,
+        FileType.proof_of_address: proof_of_address,
+        FileType.additional_doc: additional_doc,
+        FileType.id_proof: id_proof,
+        FileType.bank_statement: bank_statement,
+        FileType.pay_stub: pay_stub,
+        FileType.photo_id: photo_id,
+    }
+    return await application_service.upload_multiple_files(id, files_map)
 
-@router.get("/applications/{id}/files/{filename}")
-async def download_file(id: str, filename: str, db=Depends(get_db)):
-    try:
-        return await application_service.download_application_file(db, id, filename)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/applications/{id}/download", response_class=StreamingResponse)
+async def download_file(
+    id: str,
+    file_type: FileType,
+    db = Depends(get_db),
+):
+    application = await db.applications.find_one({"_id": ObjectId(id)})
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    first_name = application.get("main_applicant", {}).get("first_name", "unknown")
+    last_name = application.get("main_applicant", {}).get("last_name", "unknown")
+
+    return get_file_response(id, file_type, last_name, first_name)
+
+
     
 
 @router.get("/applications/{application_id}/files", response_model=List[str])
