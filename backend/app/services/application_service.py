@@ -10,6 +10,9 @@ from app.utils.helpers import serialize_document
 from app.constants import FileType
 from typing import List
 from app.utils.file_handler import validate_file_type,s3_folder_prefix
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from openpyxl import Workbook
 
 
 async def get_applications(status: Optional[str] = None):
@@ -137,6 +140,51 @@ async def list_application_files(db, application_id: str, file_type: Optional[st
     return keys
 
 
+def generate_pdf_report(data):
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    y = height - 50
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y, "Loan Applications Report")
+    p.setFont("Helvetica", 10)
+
+    y -= 30
+    for idx, doc in enumerate(data, 1):
+        line = f"{idx}. {doc.get('main_applicant', {}).get('first_name', '')} {doc.get('main_applicant', {}).get('last_name', '')} - {doc.get('status', '')}"
+        p.drawString(50, y, line)
+        y -= 15
+        if y < 50:  # start new page
+            p.showPage()
+            y = height - 50
+
+    p.save()
+    buffer.seek(0)
+    return buffer.getvalue()  # ✅ return bytes
+
+
+def generate_excel_report(data):
+    buffer = io.BytesIO()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Loan Applications"
+
+    headers = ["First Name", "Last Name", "Status"]
+    ws.append(headers)
+
+    for doc in data:
+        ws.append([
+            doc.get('main_applicant', {}).get('first_name', ''),
+            doc.get('main_applicant', {}).get('last_name', ''),
+            doc.get('status', '')
+        ])
+
+    wb.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()  # ✅ return bytes
+    
+
 async def generate_report(start_date, end_date, status, format):
     query = {}
     if status:
@@ -151,3 +199,6 @@ async def generate_report(start_date, end_date, status, format):
     if format == 'pdf':
         return generate_pdf_report(data)
     return generate_excel_report(data)
+
+
+

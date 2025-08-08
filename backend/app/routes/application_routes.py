@@ -6,9 +6,14 @@ from app.utils.file_handler import get_file_response,s3_folder_prefix,s3_client,
 from datetime import datetime
 from app.constants import FileType
 from typing import List
+from app.utils.reports.generator import generate_excel_report, generate_pdf_report
 from app.utils.db.mongodb import get_db
 from bson import ObjectId
+from app.utils.file_handler import s3_client,S3_BUCKET
+from app.utils.helpers import serialize_document
 from fastapi.responses import StreamingResponse
+import io
+from app.utils.reports.generator import generate_excel_report, generate_pdf_report
 
 router = APIRouter()
 
@@ -128,8 +133,9 @@ async def get_filtered_applications(
         }
 
     total = await db.applications.count_documents(query)
-    results_cursor = await db.applications.find(query).skip(skip).limit(limit)
+    results_cursor = db.applications.find(query).skip(skip).limit(limit)
     results = await results_cursor.to_list(length=limit)
+    results = [serialize_document(doc) for doc in results]
 
     return {
         "data": results,
@@ -138,3 +144,44 @@ async def get_filtered_applications(
         "page_size": page_size,
         "pages": (total + page_size - 1) // page_size
     }
+
+
+
+@router.get("/report/download")
+async def download_report(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    status: Optional[str] = None,
+    format: str = "pdf",
+    db=Depends(get_db)
+):
+    if format not in ["pdf", "excel"]:
+        raise HTTPException(status_code=400, detail="Invalid format. Use 'pdf' or 'excel'.")
+
+    query = {}
+    if status:
+        query["status"] = status
+    if start_date and end_date:
+        query["application_date"] = {
+            "$gte": datetime.fromisoformat(start_date),
+            "$lte": datetime.fromisoformat(end_date)
+        }
+
+    data = await db.applications.find(query).to_list(length=None)
+    for doc in data:
+        doc["_id"] = str(doc["_id"])
+
+    if format == "pdf":
+        file_bytes = generate_pdf_report(data)
+        filename = "report.pdf"
+        media_type = "application/pdf"
+    else:
+        file_bytes = generate_excel_report(data)
+        filename = "report.xlsx"
+        media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+    return StreamingResponse(
+        io.BytesIO(file_bytes),
+        media_type=media_type,
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

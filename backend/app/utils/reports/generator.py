@@ -1,24 +1,48 @@
 import io
-import pandas as pd
-from fastapi.responses import StreamingResponse
+from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from openpyxl import Workbook
 
-def generate_excel_report(data: list):
-    df = pd.DataFrame(data)
-    stream = io.BytesIO()
-    df.to_excel(stream, index=False)
-    stream.seek(0)
-    return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=report.xlsx"})
-
-def generate_pdf_report(data: list):
+def generate_pdf_report(data):
     buffer = io.BytesIO()
-    c = canvas.Canvas(buffer)
-    text_object = c.beginText(40, 800)
-    text_object.setFont("Helvetica", 10)
-    for item in data:
-        text_object.textLine(str(item))
-    c.drawText(text_object)
-    c.showPage()
-    c.save()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    y = height - 50
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y, "Loan Applications Report")
+    p.setFont("Helvetica", 10)
+
+    y -= 30
+    for idx, doc in enumerate(data, 1):
+        line = f"{idx}. {doc.get('main_applicant', {}).get('first_name', '')} {doc.get('main_applicant', {}).get('last_name', '')} - {doc.get('status', '')}"
+        p.drawString(50, y, line)
+        y -= 15
+        if y < 50:  # start new page
+            p.showPage()
+            y = height - 50
+
+    p.save()
     buffer.seek(0)
-    return StreamingResponse(buffer, media_type="application/pdf", headers={"Content-Disposition": "attachment; filename=report.pdf"})
+    return buffer.getvalue()  # ✅ return bytes
+
+
+def generate_excel_report(data):
+    buffer = io.BytesIO()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Loan Applications"
+
+    headers = ["First Name", "Last Name", "Status"]
+    ws.append(headers)
+
+    for doc in data:
+        ws.append([
+            doc.get('main_applicant', {}).get('first_name', ''),
+            doc.get('main_applicant', {}).get('last_name', ''),
+            doc.get('status', '')
+        ])
+
+    wb.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()  # ✅ return bytes
