@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class FileType(str, Enum):
     contract = "contract"
     id_proof = "id_proof"
@@ -8,3 +9,17 @@ class FileType(str, Enum):
     additional_doc = "additional_doc"
     photo_id = "photo_id"
     proof_of_address = "proof_of_address"
+
+
+class ApplicationStatus(str, Enum):
+    APPLIED = "APPLIED"
+    APPROVED = "APPROVED"
+    FUNDED = "FUNDED"
+    DECLINED = "DECLINED"
+
+
+class SecurityType(str, Enum):
+    VEHICLE = "Vehicle"
+    PROPERTY = "Property"
+    CO_SIGNER = "Co-Signer"
+    NA = "N/A"

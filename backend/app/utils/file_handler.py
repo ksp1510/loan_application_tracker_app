@@ -1,81 +1,81 @@
-import os
-import boto3
-from fastapi import UploadFile, HTTPException
-from fastapi.responses import StreamingResponse
-from botocore.exceptions import BotoCoreError, ClientError
-import uuid
-from dotenv import load_dotenv
+from __future__ import annotations
+
 import io
+import os
+
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
+from fastapi import HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
+
 from app.constants import FileType
 
-
-load_dotenv()
-
-
 s3_client = boto3.client("s3")
-S3_BUCKET = os.getenv("S3_BUCKET")
-
-ALLOWED_MIME_TYPES = {"application/pdf", "image/png", "image/jpeg"}
+S3_BUCKET = os.getenv("S3_BUCKET", "loan-application-documents-2025")
 
 
+def build_s3_key(app_id: str, first_name: str, last_name: str, file_type: FileType) -> str:
+    """
+    S3 key format: {last}_{first}_{app_id}/{file_type}.pdf
+    E.g., doe_john_6891.../contract.pdf
+    """
+    safe = f"{last_name.lower()}_{first_name.lower()}_{app_id}"
+    return f"{safe}/{file_type.value}.pdf"
 
 
-# add this helper so routes/services never handcraft prefixes
-def s3_folder_prefix(app_id: str, last_name: str, first_name: str) -> str:
-    safe_last = (last_name or "unknown").strip().lower().replace(" ", "_")
-    safe_first = (first_name or "unknown").strip().lower().replace(" ", "_")
-    return f"{safe_last}_{safe_first}_{app_id}/"
+def validate_mime_type(file: UploadFile) -> None:
+    # Keep as strict/loose as you prefer (this is just an example)
+    allowed = {"application/pdf"}
+    if (file.content_type or "").lower() not in allowed:
+        raise HTTPException(status_code=415, detail=f"Only PDF allowed. Got {file.content_type!r}")
 
 
-# app/utils/validators.py
-
-def validate_file_type(file: UploadFile):
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Only PDF files are accepted")
-
-
-# app/utils/s3_upload.py or similar
-
-def save_file(app_id: str, file: UploadFile, applicant_last_name: str, applicant_first_name: str, file_type: FileType):
+def save_file(
+    app_id: str, file: UploadFile, last_name: str, first_name: str, file_type: FileType
+) -> dict:
     try:
-        filename = f"{file_type.value}.pdf"
-        folder = f"{applicant_last_name.lower()}_{applicant_first_name.lower()}_{app_id}"
-        key = f"{folder}/{filename}"
-
-        # Force .pdf extension and validate content-type
-        if not file.filename.endswith(".pdf"):
-            raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
-
+        validate_mime_type(file)
+        key = build_s3_key(app_id, first_name, last_name, file_type)
         s3_client.upload_fileobj(file.file, S3_BUCKET, key)
-        return {
-            "message": f"{file_type.value} uploaded successfully",
-            "filename": filename,
-            "s3_key": key
-        }
+        return {"message": "File uploaded successfully", "s3_key": key}
     except (BotoCoreError, ClientError) as e:
-        raise HTTPException(status_code=500, detail=f"S3 error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"S3 error: {str(e)}") from e
 
 
-
-
-def get_file_response(app_id: str, file_type: FileType, applicant_last_name: str, applicant_first_name: str):
+def download_file(
+    app_id: str, last_name: str, first_name: str, file_type: FileType
+) -> StreamingResponse:
     try:
-        applicant_name = f"{applicant_last_name.lower()}_{applicant_first_name.lower()}"
-        # Ensure we request the same key we saved during upload
-        key = f"{applicant_name}_{app_id}/{file_type.value}.pdf"
-
+        key = build_s3_key(app_id, first_name, last_name, file_type)
         file_stream = io.BytesIO()
         s3_client.download_fileobj(S3_BUCKET, key, file_stream)
         file_stream.seek(0)
-
-        filename = f"{file_type.value}.pdf"
         return StreamingResponse(
             file_stream,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+            headers={"Content-Disposition": f"attachment; filename={file_type.value}.pdf"},
         )
     except s3_client.exceptions.NoSuchKey:
-        raise HTTPException(status_code=404, detail="File not found in S3")
+        raise HTTPException(status_code=404, detail="File not found in S3") from None
     except (BotoCoreError, ClientError) as e:
-        raise HTTPException(status_code=500, detail=f"S3 error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"S3 error: {str(e)}") from e
 
+
+def list_files_for_application(app_id: str, last_name: str, first_name: str) -> list[str]:
+    """
+    Lists keys under {last}_{first}_{app_id}/ prefix.
+    Returns just filenames (e.g., 'contract.pdf', 'proof_of_address.pdf').
+    """
+    prefix = f"{last_name.lower()}_{first_name.lower()}_{app_id}/"
+    try:
+        resp = s3_client.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix)
+        if "Contents" not in resp:
+            return []
+        names = []
+        for obj in resp["Contents"]:
+            key = obj["Key"]
+            if key.startswith(prefix):
+                names.append(key[len(prefix) :])  # strip folder prefix
+        return sorted(names)
+    except (BotoCoreError, ClientError) as e:
+        raise HTTPException(status_code=500, detail=f"S3 list error: {str(e)}") from e
