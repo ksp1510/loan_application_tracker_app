@@ -1,46 +1,52 @@
-from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Depends
-from typing import List, Optional
-from app.services import application_service
-from app.models.model import LoanApplicationBase, LoanApplicationUpdate
-from app.utils.file_handler import get_file_response,s3_folder_prefix,s3_client,S3_BUCKET
-from datetime import datetime
-from app.constants import FileType
-from typing import List
-from app.utils.reports.generator import generate_excel_report, generate_pdf_report
-from app.utils.db.mongodb import get_db
-from bson import ObjectId
-from app.utils.file_handler import s3_client,S3_BUCKET
-from app.utils.helpers import serialize_document
-from fastapi.responses import StreamingResponse
 import io
+from datetime import datetime
+from typing import Annotated, Optional
+
+from bson import ObjectId
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi.responses import StreamingResponse
+from motor.motor_asyncio import AsyncIOMotorDatabase
+
+from app.constants import FileType
+from app.models.model import LoanApplicationBase, LoanApplicationUpdate
+from app.services import application_service
+from app.utils.db.mongodb import get_db
+from app.utils.file_handler import S3_BUCKET, download_file, s3_client
+from app.utils.helpers import serialize_document
 from app.utils.reports.generator import generate_excel_report, generate_pdf_report
 
 router = APIRouter()
 
+
 @router.get("/applications")
-async def get_all_applications(status: Optional[str] = None):
+async def get_all_applications(status: Optional[str] = None) -> list[dict]:
     return await application_service.get_applications(status=status)
 
+
 @router.get("/applications/search")
-async def get_application_by_name(first_name: str = Query(...), last_name: str = Query(...)):
+async def get_application_by_name(
+    first_name: str = Query(...), last_name: str = Query(...)
+) -> dict:
     return await application_service.get_application_by_name(first_name, last_name)
 
+
 @router.post("/applications")
-async def create_application(application: LoanApplicationBase):
+async def create_application(application: LoanApplicationBase) -> dict:
     return await application_service.create_application(application)
+
 
 @router.put("/applications/{app_id}")
 @router.patch("/applications/{app_id}")
-async def update_application(app_id: str, application_update: LoanApplicationUpdate):
+async def update_application(app_id: str, application_update: LoanApplicationUpdate) -> dict:
     return await application_service.update_application(app_id, application_update)
+
 
 @router.post("/applications/{id}/upload")
 async def upload_file(
-    id: str,
-    file: UploadFile = File(...),
-    file_type: FileType = Query(...)
-):
+    id: str, file: UploadFile = File(...), file_type: FileType = Query(...)
+) -> dict:
     return await application_service.upload_application_file(id, file, file_type)
+
 
 # app/routes/application_routes.py
 @router.post("/applications/{id}/upload-multi-type")
@@ -53,8 +59,8 @@ async def upload_multi_type_files(
     bank_statement: Optional[UploadFile] = File(None),
     pay_stub: Optional[UploadFile] = File(None),
     photo_id: Optional[UploadFile] = File(None),
-):
-    files_map = {
+) -> dict:
+    raw_map = {
         FileType.contract: contract,
         FileType.proof_of_address: proof_of_address,
         FileType.additional_doc: additional_doc,
@@ -63,29 +69,32 @@ async def upload_multi_type_files(
         FileType.pay_stub: pay_stub,
         FileType.photo_id: photo_id,
     }
+    files_map = {k: v for k, v in raw_map.items() if v is not None and getattr(v, "filename", "")}
+
+    if not files_map:
+        raise HTTPException(status_code=400, detail="No files provided")
     return await application_service.upload_multiple_files(id, files_map)
 
 
 @router.get("/applications/{id}/download", response_class=StreamingResponse)
-async def download_file(
+async def download_application_file(
     id: str,
-    file_type: FileType,
-    db = Depends(get_db),
-):
+    file_type: FileType = Query(...),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> StreamingResponse:
     application = await db.applications.find_one({"_id": ObjectId(id)})
+    first = application.get("main_applicant", {}).get("first_name", "unknown")
+    last = application.get("main_applicant", {}).get("last_name", "unknown")
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
 
-    first_name = application.get("main_applicant", {}).get("first_name", "unknown")
-    last_name = application.get("main_applicant", {}).get("last_name", "unknown")
-
-    return get_file_response(id, file_type, last_name, first_name)
+    return download_file(id, last, first, file_type)
 
 
-    
-
-@router.get("/applications/{application_id}/files", response_model=List[str])
-async def list_files(application_id: str, db=Depends(get_db)):
+@router.get("/applications/{application_id}/files", response_model=list[str])
+async def list_files(
+    application_id: str, 
+    db: AsyncIOMotorDatabase = Depends(get_db)) -> list[str]:
     try:
         # Get applicant names from DB
         application = await db.applications.find_one({"_id": ObjectId(application_id)})
@@ -107,19 +116,18 @@ async def list_files(application_id: str, db=Depends(get_db)):
         return filenames
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error listing S3 files: {str(e)}")
-
+        raise HTTPException(status_code=500, detail=f"Error listing S3 files: {str(e)}") from e
 
 
 @router.get("/report")
 async def get_filtered_applications(
+    db: AsyncIOMotorDatabase = Depends(get_db),
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     status: Optional[str] = None,
     page: int = 1,
-    page_size: int = 10,
-    db=Depends(get_db)
-):
+    page_size: int = 10
+) -> dict:
     skip = (page - 1) * page_size
     limit = page_size
 
@@ -129,7 +137,7 @@ async def get_filtered_applications(
     if start_date and end_date:
         query["application_date"] = {
             "$gte": datetime.fromisoformat(start_date),
-            "$lte": datetime.fromisoformat(end_date)
+            "$lte": datetime.fromisoformat(end_date),
         }
 
     total = await db.applications.count_documents(query)
@@ -142,19 +150,18 @@ async def get_filtered_applications(
         "total": total,
         "page": page,
         "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size
+        "pages": (total + page_size - 1) // page_size,
     }
-
 
 
 @router.get("/report/download")
 async def download_report(
+    db: AsyncIOMotorDatabase = Depends(get_db),
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     status: Optional[str] = None,
-    format: str = "pdf",
-    db=Depends(get_db)
-):
+    format: str = "pdf"
+) -> StreamingResponse:
     if format not in ["pdf", "excel"]:
         raise HTTPException(status_code=400, detail="Invalid format. Use 'pdf' or 'excel'.")
 
@@ -164,7 +171,7 @@ async def download_report(
     if start_date and end_date:
         query["application_date"] = {
             "$gte": datetime.fromisoformat(start_date),
-            "$lte": datetime.fromisoformat(end_date)
+            "$lte": datetime.fromisoformat(end_date),
         }
 
     data = await db.applications.find(query).to_list(length=None)
@@ -183,5 +190,5 @@ async def download_report(
     return StreamingResponse(
         io.BytesIO(file_bytes),
         media_type=media_type,
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )

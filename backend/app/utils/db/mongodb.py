@@ -1,10 +1,12 @@
 # app/utils/db/mongodb.py
-import motor.motor_asyncio
-from app.config import MONGODB_URL, DATABASE_NAME
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
+from app.config import DATABASE_NAME, MONGODB_URL
+
+client = AsyncIOMotorClient(MONGODB_URL)
 db = client[DATABASE_NAME]
 
+
 # Reusable async getter for dependency injection or direct import
-async def get_db():
+async def get_db() -> AsyncIOMotorDatabase:
     return db

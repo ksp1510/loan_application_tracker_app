@@ -1,5 +1,8 @@
-import os, boto3
+import os
+
+import boto3
 from dotenv import load_dotenv
+
 load_dotenv()
 
 s3 = boto3.client("s3", region_name=os.getenv("AWS_REGION"))

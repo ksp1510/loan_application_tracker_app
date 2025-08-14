@@ -1,15 +1,17 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
 from config import db
 
-async def calculate_payment_date(application_id: str):
+
+async def calculate_payment_date(application_id: str) -> dict:
     application = await db.applications.find_one({"_id": application_id})
     if not application:
         return {"error": "Application not found"}
-    
+
     last_paycheck_date = datetime.strptime(application["last_paycheck_date"], "%Y-%m-%d")
     pay_frequency = application["pay_frequency"].lower()
-    min_payment_date = datetime.utcnow() + timedelta(days=21)
-    
+    min_payment_date = datetime.now(timezone.utc) + timedelta(days=21)
+
     while last_paycheck_date < min_payment_date:
         if pay_frequency == "weekly":
             last_paycheck_date += timedelta(days=7)
@@ -21,7 +23,11 @@ async def calculate_payment_date(application_id: str):
             last_paycheck_date += timedelta(days=15)
         else:
             return {"error": "Invalid pay frequency"}
-    
+
     first_payment_date = last_paycheck_date
-    days_until_payment = (first_payment_date - datetime.utcnow()).days
-    return {"first_payment_date": first_payment_date.strftime("%Y-%m-%d"), "days_until_payment": days_until_payment}
+    days_until_payment = (first_payment_date - datetime.now(timezone.utc)).days
+    return {
+        "first_payment_date": first_payment_date.strftime("%Y-%m-%d"),
+        "days_until_payment": days_until_payment,
+        "pay_frequency": pay_frequency,
+    }
