@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { ApplicationService, LoanApplication } from '../../services/application.service';
 import { FormControl } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { MaterialModule } from '../../shared/material.module';
 
 interface SummaryCard {
   title: string;
@@ -20,7 +21,10 @@ interface SummaryCard {
     selector: 'app-dashboard',
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.css'],
-    standalone: false
+    standalone: true,
+    imports: [
+      MaterialModule
+    ]
 })
 export class DashboardComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [

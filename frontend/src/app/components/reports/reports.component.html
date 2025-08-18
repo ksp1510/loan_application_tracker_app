@@ -37,17 +37,21 @@
               <mat-label>Status</mat-label>
               <mat-select formControlName="status">
                 <mat-option value="">All Statuses</mat-option>
-                <mat-option *ngFor="let status of applicationStatuses" [value]="status">
-                  {{ status }}
-                </mat-option>
+                @for (status of applicationStatuses; track status) {
+                  <mat-option [value]="status">
+                    {{ status }}
+                  </mat-option>
+                }
               </mat-select>
             </mat-form-field>
           </div>
 
           <!-- Date Range Error -->
-          <mat-error *ngIf="!isDateRangeValid()" class="date-error">
-            {{ getDateRangeError() }}
-          </mat-error>
+          @if (!isDateRangeValid()) {
+            <mat-error class="date-error">
+              {{ getDateRangeError() }}
+            </mat-error>
+          }
 
           <!-- Quick Filters -->
           <div class="quick-filters">
@@ -62,38 +66,38 @@
 
         <!-- Action Buttons -->
         <div class="filter-actions">
-          <button 
-            mat-raised-button 
-            color="primary" 
+          <button
+            mat-raised-button
+            color="primary"
             (click)="applyFilter()"
             [disabled]="!isDateRangeValid() || isLoading"
-          >
+            >
             <mat-icon>search</mat-icon>
             Apply Filters
           </button>
-          
+
           <button mat-button (click)="clearFilters()" type="button">
             <mat-icon>clear</mat-icon>
             Clear
           </button>
 
           <div class="export-buttons">
-            <button 
-              mat-stroked-button 
+            <button
+              mat-stroked-button
               color="accent"
               (click)="exportToPDF()"
               [disabled]="!hasData || isExporting"
-            >
+              >
               <mat-icon>picture_as_pdf</mat-icon>
               Export PDF
             </button>
-            
-            <button 
-              mat-stroked-button 
+
+            <button
+              mat-stroked-button
               color="accent"
               (click)="exportToExcel()"
               [disabled]="!hasData || isExporting"
-            >
+              >
               <mat-icon>table_chart</mat-icon>
               Export Excel
             </button>
@@ -104,169 +108,173 @@
   </mat-card>
 
   <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Loading report data...</p>
-  </div>
+  @if (isLoading) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading report data...</p>
+    </div>
+  }
 
   <!-- Export Loading -->
-  <mat-card *ngIf="isExporting" class="export-loading">
-    <div class="export-progress">
-      <mat-spinner diameter="30"></mat-spinner>
-      <span>Generating report...</span>
-    </div>
-  </mat-card>
+  @if (isExporting) {
+    <mat-card class="export-loading">
+      <div class="export-progress">
+        <mat-spinner diameter="30"></mat-spinner>
+        <span>Generating report...</span>
+      </div>
+    </mat-card>
+  }
 
   <!-- Error State -->
-  <mat-card *ngIf="error && !isLoading" class="error-card">
-    <mat-icon color="warn">error</mat-icon>
-    <span>{{ error }}</span>
-    <button mat-button color="primary" (click)="applyFilter()">Retry</button>
-  </mat-card>
+  @if (error && !isLoading) {
+    <mat-card class="error-card">
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ error }}</span>
+      <button mat-button color="primary" (click)="applyFilter()">Retry</button>
+    </mat-card>
+  }
 
   <!-- Summary Stats -->
-  <div *ngIf="hasData && !isLoading" class="summary-section">
-    <mat-card class="summary-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon class="section-icon">analytics</mat-icon>
-          Summary Statistics
-        </mat-card-title>
-        <mat-card-subtitle *ngIf="dateRangeText">{{ dateRangeText }}</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="stats-grid">
-          <!-- Total Applications -->
-          <div class="stat-item">
-            <div class="stat-value">{{ summaryStats.totalApplications }}</div>
-            <div class="stat-label">Total Applications</div>
-          </div>
-
-          <!-- Total Amount -->
-          <div class="stat-item">
-            <div class="stat-value">{{ formatCurrency(summaryStats.totalAmount) }}</div>
-            <div class="stat-label">Total Loan Amount</div>
-          </div>
-
-          <!-- Average Amount -->
-          <div class="stat-item">
-            <div class="stat-value">{{ formatCurrency(summaryStats.avgAmount) }}</div>
-            <div class="stat-label">Average Loan Amount</div>
-          </div>
-
-          <!-- Status Breakdown -->
-          <div class="stat-item status-breakdown">
-            <div class="stat-label">Status Breakdown</div>
-            <div class="status-stats">
-              <ng-container *ngFor="let status of applicationStatuses">
-                <div class="status-stat" *ngIf="summaryStats.statusBreakdown[status]">
-                  <span class="status-name" [ngClass]="getStatusClass(status)">
-                    {{ status }}
-                  </span>
-                  <span class="status-count">
-                    {{ summaryStats.statusBreakdown[status] }} 
-                    ({{ getStatusPercentage(status) | number:'1.1-1' }}%)
-                  </span>
-                </div>
-              </ng-container>
+  @if (hasData && !isLoading) {
+    <div class="summary-section">
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon class="section-icon">analytics</mat-icon>
+            Summary Statistics
+          </mat-card-title>
+          @if (dateRangeText) {
+            <mat-card-subtitle>{{ dateRangeText }}</mat-card-subtitle>
+          }
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stats-grid">
+            <!-- Total Applications -->
+            <div class="stat-item">
+              <div class="stat-value">{{ summaryStats.totalApplications }}</div>
+              <div class="stat-label">Total Applications</div>
             </div>
-          </div>          
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+            <!-- Total Amount -->
+            <div class="stat-item">
+              <div class="stat-value">{{ formatCurrency(summaryStats.totalAmount) }}</div>
+              <div class="stat-label">Total Loan Amount</div>
+            </div>
+            <!-- Average Amount -->
+            <div class="stat-item">
+              <div class="stat-value">{{ formatCurrency(summaryStats.avgAmount) }}</div>
+              <div class="stat-label">Average Loan Amount</div>
+            </div>
+            <!-- Status Breakdown -->
+            <div class="stat-item status-breakdown">
+              <div class="stat-label">Status Breakdown</div>
+              <div class="status-stats">
+                @for (status of applicationStatuses; track status) {
+                  @if (summaryStats.statusBreakdown[status]) {
+                    <div class="status-stat">
+                      <span class="status-name" [ngClass]="getStatusClass(status)">
+                        {{ status }}
+                      </span>
+                      <span class="status-count">
+                        {{ summaryStats.statusBreakdown[status] }}
+                        ({{ getStatusPercentage(status) | number:'1.1-1' }}%)
+                      </span>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
 
   <!-- Data Table -->
-  <mat-card *ngIf="!isLoading" class="data-table-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon class="section-icon">table_view</mat-icon>
-        Applications Data
-      </mat-card-title>
-      <mat-card-subtitle *ngIf="hasData">
-        Showing {{ dataSource.data.length }} of {{ totalItems }} applications
-      </mat-card-subtitle>
-    </mat-card-header>
-    
-    <div class="table-container">
-      <table mat-table [dataSource]="dataSource" class="reports-table" matSort>
-        
-        <!-- Applicant Column -->
-        <ng-container matColumnDef="applicant">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Applicant</th>
-          <td mat-cell *matCellDef="let application">
-            <div class="applicant-cell">
-              <div class="applicant-name">
-                {{ application.main_applicant.first_name }} 
-                {{ application.main_applicant.last_name }}
+  @if (!isLoading) {
+    <mat-card class="data-table-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon class="section-icon">table_view</mat-icon>
+          Applications Data
+        </mat-card-title>
+        @if (hasData) {
+          <mat-card-subtitle>
+            Showing {{ dataSource.data.length }} of {{ totalItems }} applications
+          </mat-card-subtitle>
+        }
+      </mat-card-header>
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" class="reports-table" matSort>
+          <!-- Applicant Column -->
+          <ng-container matColumnDef="applicant">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Applicant</th>
+            <td mat-cell *matCellDef="let application">
+              <div class="applicant-cell">
+                <div class="applicant-name">
+                  {{ application.main_applicant.first_name }}
+                  {{ application.main_applicant.last_name }}
+                </div>
+                <div class="applicant-email">{{ application.main_applicant.email }}</div>
               </div>
-              <div class="applicant-email">{{ application.main_applicant.email }}</div>
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Amount Column -->
-        <ng-container matColumnDef="amount">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Amount</th>
-          <td mat-cell *matCellDef="let application">
-            <span class="amount-value">{{ formatCurrency(application.amount) }}</span>
-          </td>
-        </ng-container>
-
-        <!-- Security Column -->
-        <ng-container matColumnDef="security">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Security</th>
-          <td mat-cell *matCellDef="let application">
-            <mat-chip class="security-chip" [disabled]="true">
-              {{ application.security }}
-            </mat-chip>
-          </td>
-        </ng-container>
-
-        <!-- Status Column -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-          <td mat-cell *matCellDef="let application">
-            <span class="status-badge" [ngClass]="getStatusClass(application.status)">
-              {{ application.status }}
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Date Column -->
-        <ng-container matColumnDef="application_date">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Application Date</th>
-          <td mat-cell *matCellDef="let application">
-            <span class="date-value">{{ formatDate2(application.application_date) }}</span>
-          </td>
-        </ng-container>
-
-        <!-- Table Rows -->
-        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
-
-        <!-- No Data Row -->
-        <tr class="no-data-row" *matNoDataRow>
-          <td class="no-data-cell" [attr.colspan]="displayedColumns.length">
-            <div class="no-data-content">
-              <mat-icon class="no-data-icon">inbox</mat-icon>
-              <p>No applications found for the selected criteria</p>
-              <p class="no-data-suggestion">Try adjusting your filters or date range</p>
-            </div>
-          </td>
-        </tr>
-      </table>
-    </div>
-
-    <!-- Paginator -->
-    <mat-paginator 
-      [length]="totalItems"
-      [pageSize]="pageSize"
-      [pageSizeOptions]="pageSizeOptions"
-      [pageIndex]="currentPage"
-      (page)="onPageChange($event)"
-      showFirstLastButtons
-      class="table-paginator">
-    </mat-paginator>
-  </mat-card>
+            </td>
+          </ng-container>
+          <!-- Amount Column -->
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Amount</th>
+            <td mat-cell *matCellDef="let application">
+              <span class="amount-value">{{ formatCurrency(application.amount) }}</span>
+            </td>
+          </ng-container>
+          <!-- Security Column -->
+          <ng-container matColumnDef="security">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Security</th>
+            <td mat-cell *matCellDef="let application">
+              <mat-chip class="security-chip" [disabled]="true">
+                {{ application.security }}
+              </mat-chip>
+            </td>
+          </ng-container>
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let application">
+              <span class="status-badge" [ngClass]="getStatusClass(application.status)">
+                {{ application.status }}
+              </span>
+            </td>
+          </ng-container>
+          <!-- Date Column -->
+          <ng-container matColumnDef="application_date">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Application Date</th>
+            <td mat-cell *matCellDef="let application">
+              <span class="date-value">{{ formatDate2(application.application_date) }}</span>
+            </td>
+          </ng-container>
+          <!-- Table Rows -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+          <!-- No Data Row -->
+          <tr class="no-data-row" *matNoDataRow>
+            <td class="no-data-cell" [attr.colspan]="displayedColumns.length">
+              <div class="no-data-content">
+                <mat-icon class="no-data-icon">inbox</mat-icon>
+                <p>No applications found for the selected criteria</p>
+                <p class="no-data-suggestion">Try adjusting your filters or date range</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <!-- Paginator -->
+      <mat-paginator
+        [length]="totalItems"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        [pageIndex]="currentPage"
+        (page)="onPageChange($event)"
+        showFirstLastButtons
+        class="table-paginator">
+      </mat-paginator>
+    </mat-card>
+  }
 </div>

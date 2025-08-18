@@ -1,3 +1,4 @@
+//application.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -35,16 +36,8 @@ export interface LoanApplication {
       };
       company_phone: string;
     };
-    vehicle1?: {
-      year: number;
-      make: string;
-      model: string;
-    };
-    vehicle2?: {
-      year: number;
-      make: string;
-      model: string;
-    };
+    vehicle1?: { year: number; make: string; model: string };
+    vehicle2?: { year: number; make: string; model: string };
     monthly_income: {
       ft_income: number;
       pt_income: number;
@@ -67,7 +60,7 @@ export interface LoanApplication {
       monthly_pymnt: number;
     }>;
   };
-  co_applicant?: any; // Same structure as main_applicant
+  co_applicant?: any;
   amount: number;
   security: 'Vehicle' | 'Property' | 'Co-Signer' | 'N/A';
   status: 'APPLIED' | 'APPROVED' | 'FUNDED' | 'DECLINED';
@@ -86,44 +79,41 @@ export interface PaginatedResponse {
 
 @Injectable({ providedIn: 'root' })
 export class ApplicationService {
-  private baseUrl = 'api/applications';
-  private apiUrl = 'http://localhost:8000';   // 👈 points to in-memory API
+  private apiUrl = 'http://localhost:8000/applications'; // ✅ backend root
 
   constructor(private http: HttpClient) {}
 
-  // Get all applications with optional status filter
+  // ✅ GET /applications?status=
   getAllApplications(status?: string): Observable<LoanApplication[]> {
     let params = new HttpParams();
-    if (status) {
-      params = params.set('status', status);
-    }
-    return this.http.get<LoanApplication[]>(`${this.baseUrl}`, { params });
+    if (status) params = params.set('status', status);
+    return this.http.get<LoanApplication[]>(this.apiUrl, { params });
   }
 
-  // Get single application by ID
+  // ✅ GET /applications/{id}
   getApplicationById(id: string): Observable<LoanApplication> {
-    return this.http.get<LoanApplication>(`${this.baseUrl}/${id}`);
+    return this.http.get<LoanApplication>(`${this.apiUrl}/${id}`);
   }
 
-  // Search by applicant name
+  // ✅ GET /applications/search?first_name=&last_name=
   searchByName(firstName: string, lastName: string): Observable<LoanApplication> {
     const params = new HttpParams()
       .set('first_name', firstName)
       .set('last_name', lastName);
-    return this.http.get<LoanApplication>(`${this.baseUrl}/search`, { params });
+    return this.http.get<LoanApplication>(`${this.apiUrl}/search`, { params });
   }
 
-  // Create new application
+  // ✅ POST /applications
   createApplication(application: Partial<LoanApplication>): Observable<{ id: string }> {
-    return this.http.post<{ id: string }>(`${this.baseUrl}/`, application);
+    return this.http.post<{ id: string }>(this.apiUrl, application);
   }
 
-  // Update application
+  // ✅ PUT /applications/{id}
   updateApplication(id: string, updates: Partial<LoanApplication>): Observable<{ message: string }> {
-    return this.http.put<{ message: string }>(`${this.baseUrl}/${id}`, updates);
+    return this.http.put<{ message: string }>(`${this.apiUrl}/${id}`, updates);
   }
 
-  // Get filtered applications with pagination for reports
+  // ✅ GET /applications/report?start_date=&end_date=&status=&page=&page_size=
   getFilteredApplications(
     startDate?: string,
     endDate?: string,
@@ -139,10 +129,10 @@ export class ApplicationService {
     if (endDate) params = params.set('end_date', endDate);
     if (status) params = params.set('status', status);
 
-    return this.http.get<PaginatedResponse>(`${this.baseUrl}/report`, { params });
+    return this.http.get<PaginatedResponse>(`${this.apiUrl}/report`, { params });
   }
 
-  // Download report
+  // ✅ GET /applications/report/download?format=pdf|excel
   downloadReport(
     format: 'pdf' | 'excel',
     startDate?: string,
@@ -150,12 +140,11 @@ export class ApplicationService {
     status?: string
   ): Observable<Blob> {
     let params = new HttpParams().set('format', format);
-    
     if (startDate) params = params.set('start_date', startDate);
     if (endDate) params = params.set('end_date', endDate);
     if (status) params = params.set('status', status);
 
-    return this.http.get(`${this.baseUrl}/report/download`, {
+    return this.http.get(`${this.apiUrl}/report/download`, {
       params,
       responseType: 'blob'
     });

@@ -5,7 +5,14 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpClient } from '@angular/common/http';
-
+import { CommonModule } from '@angular/common';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
+import { MaterialModule } from '../../shared/material.module';
 
 import { ApplicationService, LoanApplication, PaginatedResponse } from '../../services/application.service';
 
@@ -13,7 +20,10 @@ import { ApplicationService, LoanApplication, PaginatedResponse } from '../../se
     selector: 'app-reports',
     templateUrl: './reports.component.html',
     styleUrls: ['./reports.component.css'],
-    standalone: false
+    standalone: true,
+    imports: [
+      MaterialModule
+    ]
 })
 export class ReportsComponent implements OnInit {
   reportForm!: FormGroup;

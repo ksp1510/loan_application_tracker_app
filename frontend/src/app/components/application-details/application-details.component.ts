@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
+import { MaterialModule } from '../../shared/material.module';
 import { Observable } from 'rxjs';
 
 import { ApplicationService, LoanApplication } from '../../services/application.service';
@@ -21,7 +22,10 @@ interface FileUploadProgress {
     selector: 'app-application-details',
     templateUrl: './application-details.component.html',
     styleUrls: ['./application-details.component.css'],
-    standalone: false
+    standalone: true,
+    imports: [
+      MaterialModule
+    ]
 })
 export class ApplicationDetailsComponent implements OnInit {
   applicationId!: string;

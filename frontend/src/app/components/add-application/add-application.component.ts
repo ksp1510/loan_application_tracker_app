@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { trigger, state, style, transition, animate } from '@angular/animations';
-
+import { trigger, style, transition, animate } from '@angular/animations';
+import { MaterialModule } from '../../shared/material.module';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
 import { ApplicationService } from '../../services/application.service';
 
 // Custom Validators
@@ -24,24 +26,29 @@ function canadianPhoneValidator(control: AbstractControl) {
 }
 
 @Component({
-    selector: 'app-add-application',
-    templateUrl: './add-application.component.html',
-    styleUrls: ['./add-application.component.css'],
-    animations: [
-        trigger('slideIn', [
-            transition(':enter', [
-                style({ transform: 'translateX(-100%)', opacity: 0 }),
-                animate('300ms ease-in', style({ transform: 'translateX(0%)', opacity: 1 }))
-            ])
-        ]),
-        trigger('fadeIn', [
-            transition(':enter', [
-                style({ opacity: 0, transform: 'translateY(20px)' }),
-                animate('400ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-            ])
-        ])
-    ],
-    standalone: false
+  standalone: true,
+  selector: 'app-add-application',
+  templateUrl: './add-application.component.html',
+  styleUrls: ['./add-application.component.css'],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MaterialModule
+  ],
+  animations: [
+    trigger('slideIn', [
+      transition(':enter', [
+        style({ transform: 'translateX(-100%)', opacity: 0 }),
+        animate('300ms ease-in', style({ transform: 'translateX(0%)', opacity: 1 }))
+      ])
+    ]),
+    trigger('fadeIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(20px)' }),
+        animate('400ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ])
+  ],
 })
 export class AddApplicationComponent implements OnInit {
   applicationForm!: FormGroup;

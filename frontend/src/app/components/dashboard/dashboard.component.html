@@ -9,203 +9,199 @@
   </div>
 
   <!-- Loading Indicator -->
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Loading applications...</p>
-  </div>
+  @if (isLoading) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading applications...</p>
+    </div>
+  }
 
   <!-- Error Message -->
-  <mat-card *ngIf="error && !isLoading" class="error-card">
-    <mat-icon color="warn">error</mat-icon>
-    <span>{{ error }}</span>
-    <button mat-button color="primary" (click)="loadApplications()">Retry</button>
-  </mat-card>
+  @if (error && !isLoading) {
+    <mat-card class="error-card">
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ error }}</span>
+      <button mat-button color="primary" (click)="loadApplications()">Retry</button>
+    </mat-card>
+  }
 
   <!-- Summary Cards -->
-  <div class="summary-section" *ngIf="!isLoading && !error">
-    <div class="summary-grid">
-      <mat-card 
-        *ngFor="let card of summaryCards" 
-        class="summary-card"
-        [style.border-left-color]="card.color"
-      >
-        <div class="card-header">
-          <mat-icon [style.color]="card.color" class="card-icon">{{ card.icon }}</mat-icon>
-          <div class="card-content">
-            <h3 class="card-count">{{ card.count }}</h3>
-            <p class="card-title">{{ card.title }}</p>
-            <span class="card-description">{{ card.description }}</span>
-          </div>
-        </div>
-      </mat-card>
+  @if (!isLoading && !error) {
+    <div class="summary-section">
+      <div class="summary-grid">
+        @for (card of summaryCards; track card) {
+          <mat-card
+            class="summary-card"
+            [style.border-left-color]="card.color"
+            >
+            <div class="card-header">
+              <mat-icon [style.color]="card.color" class="card-icon">{{ card.icon }}</mat-icon>
+              <div class="card-content">
+                <h3 class="card-count">{{ card.count }}</h3>
+                <p class="card-title">{{ card.title }}</p>
+                <span class="card-description">{{ card.description }}</span>
+              </div>
+            </div>
+          </mat-card>
+        }
+      </div>
     </div>
-  </div>
+  }
 
   <!-- Search and Filter Section -->
-  <mat-card class="search-section" *ngIf="!isLoading && !error">
-    <div class="search-controls">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Search applications</mat-label>
-        <input 
-          matInput 
-          [formControl]="searchControl" 
-          placeholder="Search by name, status, amount..."
-        >
-        <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Filter by status</mat-label>
-        <mat-select [formControl]="statusFilter">
-          <mat-option value="">All Statuses</mat-option>
-          <mat-option value="APPLIED">Applied</mat-option>
-          <mat-option value="APPROVED">Approved</mat-option>
-          <mat-option value="FUNDED">Funded</mat-option>
-          <mat-option value="DECLINED">Declined</mat-option>
-        </mat-select>
-        <mat-icon matSuffix>filter_list</mat-icon>
-      </mat-form-field>
-
-      <button 
-        mat-raised-button 
-        color="accent" 
-        (click)="searchByName()"
-        [disabled]="!searchControl.value"
-        class="search-button"
-      >
-        <mat-icon>person_search</mat-icon>
-        Quick Search
-      </button>
-
-      <button mat-stroked-button (click)="exportData()" class="export-button">
-        <mat-icon>download</mat-icon>
-        Export
-      </button>
-    </div>
-
-    <div class="results-info">
-      <span class="results-count">
-        Showing {{ filteredCount }} of {{ totalApplications }} applications
-      </span>
-    </div>
-  </mat-card>
+  @if (!isLoading && !error) {
+    <mat-card class="search-section">
+      <div class="search-controls">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search applications</mat-label>
+          <input
+            matInput
+            [formControl]="searchControl"
+            placeholder="Search by name, status, amount..."
+            >
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Filter by status</mat-label>
+          <mat-select [formControl]="statusFilter">
+            <mat-option value="">All Statuses</mat-option>
+            <mat-option value="APPLIED">Applied</mat-option>
+            <mat-option value="APPROVED">Approved</mat-option>
+            <mat-option value="FUNDED">Funded</mat-option>
+            <mat-option value="DECLINED">Declined</mat-option>
+          </mat-select>
+          <mat-icon matSuffix>filter_list</mat-icon>
+        </mat-form-field>
+        <button
+          mat-raised-button
+          color="accent"
+          (click)="searchByName()"
+          [disabled]="!searchControl.value"
+          class="search-button"
+          >
+          <mat-icon>person_search</mat-icon>
+          Quick Search
+        </button>
+        <button mat-stroked-button (click)="exportData()" class="export-button">
+          <mat-icon>download</mat-icon>
+          Export
+        </button>
+      </div>
+      <div class="results-info">
+        <span class="results-count">
+          Showing {{ filteredCount }} of {{ totalApplications }} applications
+        </span>
+      </div>
+    </mat-card>
+  }
 
   <!-- Applications Table -->
-  <mat-card class="table-section" *ngIf="!isLoading && !error">
-    <mat-card-header>
-      <mat-card-title>Applications</mat-card-title>
-    </mat-card-header>
-
-    <div class="table-container">
-      <table mat-table [dataSource]="dataSource" class="applications-table" matSort>
-        
-        <!-- Applicant Column -->
-        <ng-container matColumnDef="applicant">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Applicant</th>
-          <td mat-cell *matCellDef="let application">
-            <div class="applicant-cell">
-              <div class="applicant-name">
-                {{ application.main_applicant.first_name }} {{ application.main_applicant.last_name }}
+  @if (!isLoading && !error) {
+    <mat-card class="table-section">
+      <mat-card-header>
+        <mat-card-title>Applications</mat-card-title>
+      </mat-card-header>
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" class="applications-table" matSort>
+          <!-- Applicant Column -->
+          <ng-container matColumnDef="applicant">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Applicant</th>
+            <td mat-cell *matCellDef="let application">
+              <div class="applicant-cell">
+                <div class="applicant-name">
+                  {{ application.main_applicant.first_name }} {{ application.main_applicant.last_name }}
+                </div>
+                <div class="applicant-email">{{ application.main_applicant.email }}</div>
               </div>
-              <div class="applicant-email">{{ application.main_applicant.email }}</div>
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Amount Column -->
-        <ng-container matColumnDef="amount">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Amount</th>
-          <td mat-cell *matCellDef="let application">
-            <span class="amount-value">{{ formatCurrency(application.amount) }}</span>
-          </td>
-        </ng-container>
-
-        <!-- Security Column -->
-        <ng-container matColumnDef="security">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Security</th>
-          <td mat-cell *matCellDef="let application">
-            <mat-chip-option class="security-chip" [disabled]="true">
-              {{ application.security }}
-            </mat-chip-option>
-          </td>
-        </ng-container>
-
-        <!-- Status Column -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-          <td mat-cell *matCellDef="let application">
-            <span class="status-badge" [ngClass]="getStatusClass(application.status)">
-              {{ application.status }}
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Date Column -->
-        <ng-container matColumnDef="application_date">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Application Date</th>
-          <td mat-cell *matCellDef="let application">
-            <span class="date-value">{{ formatDate(application.application_date) }}</span>
-          </td>
-        </ng-container>
-
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef class="actions-header">Actions</th>
-          <td mat-cell *matCellDef="let application" class="actions-cell">
-            <div class="action-buttons">
-              <button 
-                mat-icon-button 
-                color="primary" 
-                (click)="viewApplication(application._id)"
-                matTooltip="View Details"
-                class="action-button"
-              >
-                <mat-icon>visibility</mat-icon>
-              </button>
-              
-              <button 
-                mat-icon-button 
-                color="accent" 
-                (click)="editApplication(application._id)"
-                matTooltip="Edit Application"
-                class="action-button"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Table Rows -->
-        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-        <tr 
-          mat-row 
-          *matRowDef="let row; columns: displayedColumns;" 
-          class="table-row"
-          (click)="viewApplication(row._id)"
-        ></tr>
-
-        <!-- No Data Row -->
-        <tr class="no-data-row" *matNoDataRow>
-          <td class="no-data-cell" [attr.colspan]="displayedColumns.length">
-            <div class="no-data-content">
-              <mat-icon class="no-data-icon">inbox</mat-icon>
-              <p>No applications found</p>
-              <button mat-raised-button color="primary" (click)="addNewApplication()">
-                Create First Application
-              </button>
-            </div>
-          </td>
-        </tr>
-      </table>
-    </div>
-
-    <!-- Paginator -->
-    <mat-paginator 
-      [pageSize]="10" 
-      [pageSizeOptions]="[5, 10, 25, 50, 100]"
-      showFirstLastButtons
-      class="table-paginator">
-    </mat-paginator>
-  </mat-card>
+            </td>
+          </ng-container>
+          <!-- Amount Column -->
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Amount</th>
+            <td mat-cell *matCellDef="let application">
+              <span class="amount-value">{{ formatCurrency(application.amount) }}</span>
+            </td>
+          </ng-container>
+          <!-- Security Column -->
+          <ng-container matColumnDef="security">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Security</th>
+            <td mat-cell *matCellDef="let application">
+              <mat-chip-option class="security-chip" [disabled]="true">
+                {{ application.security }}
+              </mat-chip-option>
+            </td>
+          </ng-container>
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let application">
+              <span class="status-badge" [ngClass]="getStatusClass(application.status)">
+                {{ application.status }}
+              </span>
+            </td>
+          </ng-container>
+          <!-- Date Column -->
+          <ng-container matColumnDef="application_date">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Application Date</th>
+            <td mat-cell *matCellDef="let application">
+              <span class="date-value">{{ formatDate(application.application_date) }}</span>
+            </td>
+          </ng-container>
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="actions-header">Actions</th>
+            <td mat-cell *matCellDef="let application" class="actions-cell">
+              <div class="action-buttons">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  (click)="viewApplication(application._id)"
+                  matTooltip="View Details"
+                  class="action-button"
+                  >
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="accent"
+                  (click)="editApplication(application._id)"
+                  matTooltip="Edit Application"
+                  class="action-button"
+                  >
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+          <!-- Table Rows -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumns;"
+            class="table-row"
+            (click)="viewApplication(row._id)"
+          ></tr>
+          <!-- No Data Row -->
+          <tr class="no-data-row" *matNoDataRow>
+            <td class="no-data-cell" [attr.colspan]="displayedColumns.length">
+              <div class="no-data-content">
+                <mat-icon class="no-data-icon">inbox</mat-icon>
+                <p>No applications found</p>
+                <button mat-raised-button color="primary" (click)="addNewApplication()">
+                  Create First Application
+                </button>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <!-- Paginator -->
+      <mat-paginator
+        [pageSize]="10"
+        [pageSizeOptions]="[5, 10, 25, 50, 100]"
+        showFirstLastButtons
+        class="table-paginator">
+      </mat-paginator>
+    </mat-card>
+  }
 </div>
