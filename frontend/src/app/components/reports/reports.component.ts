@@ -10,9 +10,10 @@ import { HttpClient } from '@angular/common/http';
 import { ApplicationService, LoanApplication, PaginatedResponse } from '../../services/application.service';
 
 @Component({
-  selector: 'app-reports',
-  templateUrl: './reports.component.html',
-  styleUrls: ['./reports.component.css']
+    selector: 'app-reports',
+    templateUrl: './reports.component.html',
+    styleUrls: ['./reports.component.css'],
+    standalone: false
 })
 export class ReportsComponent implements OnInit {
   reportForm!: FormGroup;

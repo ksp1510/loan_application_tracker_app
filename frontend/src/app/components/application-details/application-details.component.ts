@@ -18,9 +18,10 @@ interface FileUploadProgress {
 }
 
 @Component({
-  selector: 'app-application-details',
-  templateUrl: './application-details.component.html',
-  styleUrls: ['./application-details.component.css']
+    selector: 'app-application-details',
+    templateUrl: './application-details.component.html',
+    styleUrls: ['./application-details.component.css'],
+    standalone: false
 })
 export class ApplicationDetailsComponent implements OnInit {
   applicationId!: string;
