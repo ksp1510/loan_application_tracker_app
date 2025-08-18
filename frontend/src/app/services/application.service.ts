@@ -1,88 +1,162 @@
-// Service: application.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { HttpParams } from '@angular/common/http';
+
+export interface LoanApplication {
+  _id: string;
+  main_applicant: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    cell_phone: string;
+    date_of_birth: string;
+    SIN: string;
+    address: {
+      street: string;
+      city: string;
+      province: string;
+      postal_code: string;
+    };
+    rent: number;
+    duration_at_address: number;
+    marital_status: string;
+    dependents: number;
+    status_in_canada: string;
+    ft_employment?: {
+      company_name: string;
+      position: string;
+      length_of_service: number;
+      gross_income: number;
+      company_address: {
+        street: string;
+        city: string;
+        province: string;
+        postal_code: string;
+      };
+      company_phone: string;
+    };
+    vehicle1?: {
+      year: number;
+      make: string;
+      model: string;
+    };
+    vehicle2?: {
+      year: number;
+      make: string;
+      model: string;
+    };
+    monthly_income: {
+      ft_income: number;
+      pt_income: number;
+      child_tax: number;
+      govt_support: number;
+      pension: number;
+    };
+    monthly_expenses: {
+      utilities: number;
+      property_taxs: number;
+      child_support: number;
+      groceries: number;
+      car_insurence: number;
+      car_payment: number;
+      phone_bill: number;
+      internet: number;
+    };
+    loan?: Array<{
+      financial_institution: string;
+      monthly_pymnt: number;
+    }>;
+  };
+  co_applicant?: any; // Same structure as main_applicant
+  amount: number;
+  security: 'Vehicle' | 'Property' | 'Co-Signer' | 'N/A';
+  status: 'APPLIED' | 'APPROVED' | 'FUNDED' | 'DECLINED';
+  notes?: string;
+  reason?: string;
+  application_date: string;
+}
+
+export interface PaginatedResponse {
+  data: LoanApplication[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ApplicationService {
-  private baseUrl = 'http://localhost:8000'; // adjust for prod
+  private baseUrl = 'api/applications';
+  private apiUrl = 'http://localhost:8000';   // 👈 points to in-memory API
 
   constructor(private http: HttpClient) {}
 
-  getAllApplications(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/applications`);
-  }
-
-  getApplicationById(id: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/applications/${id}`);
-  }
-
-  searchByName(name: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/applications/search?name=${name}`);
-  }
-
-  createApplication(application: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/applications`, application);
-  }
-
-  updateNotes(id: string, payload: { notes: string }): Observable<any> {
-    return this.http.put<any>(`${this.baseUrl}/applications/${id}`, payload);
-  }
-
-  updateApplication(id: string, application: any): Observable<any> {
-    return this.http.put<any>(`${this.baseUrl}/applications/${id}`, application);
-  }
-
-  deleteApplication(id: string): Observable<any> {
-    return this.http.delete<any>(`${this.baseUrl}/applications/${id}`);
-  }
-
-  uploadFile(id: string, file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post(`${this.baseUrl}/applications/${id}/upload`, formData);
-  }
-
-  getFiles(id: string): Observable<string[]> {
-    return this.http.get<string[]>(`${this.baseUrl}/applications/${id}/files`);
-  }
-
-  downloadFile(id: string, filename: string): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/applications/${id}/files/${filename}`, { responseType: 'blob' });
-  }
-
-  getFilteredApplications(startDate: string, endDate: string, status = '', page = 1, pageSize = 10): Observable<any> {
-    let params = new HttpParams()
-      .set('start_date', startDate)
-      .set('end_date', endDate)
-      .set('page', page)
-      .set('page_size', pageSize);
-  
+  // Get all applications with optional status filter
+  getAllApplications(status?: string): Observable<LoanApplication[]> {
+    let params = new HttpParams();
     if (status) {
       params = params.set('status', status);
     }
-  
-    return this.http.get<any>(`${this.baseUrl}/applications/report`, { params });
+    return this.http.get<LoanApplication[]>(`${this.baseUrl}`, { params });
   }
-  
-  getPaginatedApplications(startDate: string, endDate: string, status: string, page: number, pageSize: number): Observable<any> {
+
+  // Get single application by ID
+  getApplicationById(id: string): Observable<LoanApplication> {
+    return this.http.get<LoanApplication>(`${this.baseUrl}/${id}`);
+  }
+
+  // Search by applicant name
+  searchByName(firstName: string, lastName: string): Observable<LoanApplication> {
+    const params = new HttpParams()
+      .set('first_name', firstName)
+      .set('last_name', lastName);
+    return this.http.get<LoanApplication>(`${this.baseUrl}/search`, { params });
+  }
+
+  // Create new application
+  createApplication(application: Partial<LoanApplication>): Observable<{ id: string }> {
+    return this.http.post<{ id: string }>(`${this.baseUrl}/`, application);
+  }
+
+  // Update application
+  updateApplication(id: string, updates: Partial<LoanApplication>): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.baseUrl}/${id}`, updates);
+  }
+
+  // Get filtered applications with pagination for reports
+  getFilteredApplications(
+    startDate?: string,
+    endDate?: string,
+    status?: string,
+    page = 1,
+    pageSize = 10
+  ): Observable<PaginatedResponse> {
     let params = new HttpParams()
-      .set('start_date', startDate)
-      .set('end_date', endDate)
       .set('page', page.toString())
       .set('page_size', pageSize.toString());
 
-    if (status) {
-      params = params.set('status', status);
-    }
+    if (startDate) params = params.set('start_date', startDate);
+    if (endDate) params = params.set('end_date', endDate);
+    if (status) params = params.set('status', status);
 
-    return this.http.get<any>(`${this.baseUrl}/report`, { params });
+    return this.http.get<PaginatedResponse>(`${this.baseUrl}/report`, { params });
   }
 
-  getReport(filters: any): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/applications/reports`, {
-      params: filters,
+  // Download report
+  downloadReport(
+    format: 'pdf' | 'excel',
+    startDate?: string,
+    endDate?: string,
+    status?: string
+  ): Observable<Blob> {
+    let params = new HttpParams().set('format', format);
+    
+    if (startDate) params = params.set('start_date', startDate);
+    if (endDate) params = params.set('end_date', endDate);
+    if (status) params = params.set('status', status);
+
+    return this.http.get(`${this.baseUrl}/report/download`, {
+      params,
       responseType: 'blob'
     });
   }

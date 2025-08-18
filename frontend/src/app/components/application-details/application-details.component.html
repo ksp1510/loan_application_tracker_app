@@ -1,1 +1,292 @@
-<p>application-details works!</p>
+<div class="application-details-container">
+    <!-- Header -->
+    <div class="header-section">
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1 class="page-title">Application Details</h1>
+      <div class="header-actions">
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="isEditing = !isEditing"
+          *ngIf="!isEditing"
+        >
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        <div *ngIf="isEditing" class="edit-actions">
+          <button mat-button (click)="cancelEdit()">Cancel</button>
+          <button mat-raised-button color="primary" (click)="saveChanges()">
+            <mat-icon>save</mat-icon>
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading application details...</p>
+    </div>
+  
+    <!-- Error State -->
+    <mat-card *ngIf="error && !isLoading" class="error-card">
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ error }}</span>
+      <button mat-button color="primary" (click)="loadApplication()">Retry</button>
+    </mat-card>
+  
+    <!-- Main Content -->
+    <div *ngIf="application && !isLoading" class="content-grid">
+      
+      <!-- Application Overview -->
+      <mat-card class="overview-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon class="section-icon">assignment</mat-icon>
+            Application Overview
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="overview-grid" *ngIf="!isEditing">
+            <div class="overview-item">
+              <span class="label">Application ID</span>
+              <span class="value">{{ application._id }}</span>
+            </div>
+            <div class="overview-item">
+              <span class="label">Status</span>
+              <mat-chip 
+                class="status-chip" 
+                [style.background-color]="getStatusColor(application.status)"
+              >
+                {{ application.status }}
+              </mat-chip>
+            </div>
+            <div class="overview-item">
+              <span class="label">Loan Amount</span>
+              <span class="value amount">{{ formatCurrency(application.amount) }}</span>
+            </div>
+            <div class="overview-item">
+              <span class="label">Security</span>
+              <span class="value">{{ application.security }}</span>
+            </div>
+            <div class="overview-item">
+              <span class="label">Application Date</span>
+              <span class="value">{{ formatDate(application.application_date) }}</span>
+            </div>
+          </div>
+  
+          <!-- Edit Form -->
+          <form [formGroup]="editForm" *ngIf="isEditing" class="edit-form">
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Status</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option 
+                    *ngFor="let status of statusOptions" 
+                    [value]="status.value"
+                  >
+                    {{ status.label }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="isFieldInvalid('status')">
+                  {{ getFieldError('status') }}
+                </mat-error>
+              </mat-form-field>
+  
+              <mat-form-field appearance="outline">
+                <mat-label>Loan Amount</mat-label>
+                <input matInput type="number" formControlName="amount">
+                <span matPrefix>$</span>
+                <mat-error *ngIf="isFieldInvalid('amount')">
+                  {{ getFieldError('amount') }}
+                </mat-error>
+              </mat-form-field>
+  
+              <mat-form-field appearance="outline">
+                <mat-label>Security</mat-label>
+                <mat-select formControlName="security">
+                  <mat-option 
+                    *ngFor="let security of securityOptions" 
+                    [value]="security.value"
+                  >
+                    {{ security.label }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="isFieldInvalid('security')">
+                  {{ getFieldError('security') }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+  
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Notes</mat-label>
+              <textarea matInput formControlName="notes" rows="3"></textarea>
+            </mat-form-field>
+  
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Reason</mat-label>
+              <textarea matInput formControlName="reason" rows="2"></textarea>
+            </mat-form-field>
+          </form>
+  
+          <!-- Notes Display (Read-only) -->
+          <div *ngIf="!isEditing && (application.notes || application.reason)" class="notes-section">
+            <div *ngIf="application.notes" class="note-item">
+              <span class="note-label">Notes:</span>
+              <p class="note-content">{{ application.notes }}</p>
+            </div>
+            <div *ngIf="application.reason" class="note-item">
+              <span class="note-label">Reason:</span>
+              <p class="note-content">{{ application.reason }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+  
+      <!-- Applicant Information -->
+      <mat-card class="applicant-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon class="section-icon">person</mat-icon>
+            Main Applicant
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="applicant-grid">
+            <div class="info-section">
+              <h4>Personal Information</h4>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="label">Name</span>
+                  <span class="value">
+                    {{ application.main_applicant.first_name }} 
+                    {{ application.main_applicant.last_name }}
+                  </span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Email</span>
+                  <span class="value">{{ application.main_applicant.email }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Phone</span>
+                  <span class="value">{{ application.main_applicant.cell_phone }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Date of Birth</span>
+                  <span class="value">{{ application.main_applicant.date_of_birth }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">SIN</span>
+                  <span class="value">{{ application.main_applicant.SIN }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Marital Status</span>
+                  <span class="value">{{ application.main_applicant.marital_status }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Dependents</span>
+                  <span class="value">{{ application.main_applicant.dependents }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Status in Canada</span>
+                  <span class="value">{{ application.main_applicant.status_in_canada }}</span>
+                </div>
+              </div>
+            </div>
+  
+            <div class="info-section" *ngIf="application.main_applicant.address">
+              <h4>Address</h4>
+              <div class="address-block">
+                <p>{{ application.main_applicant.address.street }}</p>
+                <p>
+                  {{ application.main_applicant.address.city }}, 
+                  {{ application.main_applicant.address.province }}
+                </p>
+                <p>{{ application.main_applicant.address.postal_code }}</p>
+              </div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="label">Monthly Rent</span>
+                  <span class="value">{{ formatCurrency(application.main_applicant.rent) }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Duration at Address</span>
+                  <span class="value">{{ application.main_applicant.duration_at_address }} months</span>
+                </div>
+              </div>
+            </div>
+  
+            <div class="info-section" *ngIf="application.main_applicant.ft_employment">
+              <h4>Employment</h4>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="label">Company</span>
+                  <span class="value">{{ application.main_applicant.ft_employment.company_name }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Position</span>
+                  <span class="value">{{ application.main_applicant.ft_employment.position }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Length of Service</span>
+                  <span class="value">{{ application.main_applicant.ft_employment.length_of_service }} months</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Gross Income</span>
+                  <span class="value">{{ formatCurrency(application.main_applicant.ft_employment.gross_income) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+  
+      <!-- Financial Summary -->
+      <mat-card class="financial-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon class="section-icon">account_balance</mat-icon>
+            Financial Summary
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="financial-grid">
+            <div class="financial-section income">
+              <h4>Monthly Income</h4>
+              <div class="financial-items">
+                <div class="financial-item" *ngIf="application.main_applicant.monthly_income.ft_income">
+                  <span>Full-time Income</span>
+                  <span>{{ formatCurrency(application.main_applicant.monthly_income.ft_income) }}</span>
+                </div>
+                <div class="financial-item" *ngIf="application.main_applicant.monthly_income.pt_income">
+                  <span>Part-time Income</span>
+                  <span>{{ formatCurrency(application.main_applicant.monthly_income.pt_income) }}</span>
+                </div>
+                <div class="financial-item" *ngIf="application.main_applicant.monthly_income.child_tax">
+                  <span>Child Tax</span>
+                  <span>{{ formatCurrency(application.main_applicant.monthly_income.child_tax) }}</span>
+                </div>
+                <div class="financial-item" *ngIf="application.main_applicant.monthly_income.govt_support">
+                  <span>Government Support</span>
+                  <span>{{ formatCurrency(application.main_applicant.monthly_income.govt_support) }}</span>
+                </div>
+                <div class="financial-item" *ngIf="application.main_applicant.monthly_income.pension">
+                  <span>Pension</span>
+                  <span>{{ formatCurrency(application.main_applicant.monthly_income.pension) }}</span>
+                </div>
+                <div class="financial-total">
+                  <span>Total Income</span>
+                  <span class="total-amount">{{ formatCurrency(getTotalIncome()) }}</span>
+                </div>
+              </div>
+            </div>
+  
+            <div class="financial-section expenses">
+              <h4>Monthly Expenses</h4>
+              <div class="financial-items">
+                <div class="financial-item" *ngIf="application.main_applicant.monthly_expenses.utilities">
+                  <span>Utilities</span>
+                  <span>{{ formatCurrency(application.main_applicant.monthly_expenses.utilities) }}</span>

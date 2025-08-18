@@ -1,15 +1,13 @@
-// reports.component.ts
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ApplicationService } from '../../services/application.service';
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { DatePipe } from '@angular/common';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { HttpClient } from '@angular/common/http';
 
+
+import { ApplicationService, LoanApplication, PaginatedResponse } from '../../services/application.service';
 
 @Component({
   selector: 'app-reports',
@@ -18,104 +16,321 @@ import { DatePipe } from '@angular/common';
 })
 export class ReportsComponent implements OnInit {
   reportForm!: FormGroup;
-  dataSource = new MatTableDataSource<any>();
-  filteredData: any[] = [];
-  applicationStatuses: string[] = ['APPLIED', 'FUNDED', 'DECLINED'];
-  displayedColumns: string[] = ['applicant', 'amount', 'security', 'status', 'application_date'];
-  isLoading: boolean = false;
-  errorMessage: string = '';
-  currentPage = 1;
-  pageSize = 10;
+  dataSource = new MatTableDataSource<LoanApplication>();
+  
+  displayedColumns: string[] = [
+    'applicant',
+    'amount', 
+    'security',
+    'status',
+    'application_date'
+  ];
+
+  applicationStatuses = ['APPLIED', 'APPROVED', 'FUNDED', 'DECLINED'];
+  
+  // Pagination
   totalItems = 0;
-  pages = 0;
+  currentPage = 0;
+  pageSize = 10;
+  pageSizeOptions = [5, 10, 25, 50];
+  
+  // Loading states
+  isLoading = false;
+  isExporting = false;
+  error = '';
+
+  // Summary stats
+  summaryStats = {
+    totalApplications: 0,
+    totalAmount: 0,
+    avgAmount: 0,
+    statusBreakdown: {} as Record<string, number>
+  };
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private fb: FormBuilder,
+  constructor(
+    private fb: FormBuilder,
+    private http: HttpClient,
     private applicationService: ApplicationService,
-    private datePipe: DatePipe) {}
+    private snackBar: MatSnackBar
+  ) {
+    this.initializeForm();
+  }
 
   ngOnInit(): void {
+    //this.loadInitialData();
+    this.loadSummary();
+  }
+
+  loadSummary(): void {
+    this.http.get<any>('api/summaryStats').subscribe(data => {
+      this.summaryStats = data;
+      this.applicationStatuses = Object.keys(this.summaryStats.statusBreakdown);
+    });
+  }
+  
+
+  private initializeForm(): void {
+    // Set default date range (last 30 days)
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+
     this.reportForm = this.fb.group({
-      startDate: ['', Validators.required],
-      endDate: ['', Validators.required],
+      startDate: [startDate, Validators.required],
+      endDate: [endDate, Validators.required],
       status: ['']
     });
   }
 
+  private loadInitialData(): void {
+    // Load data with default filters
+    this.applyFilter();
+  }
+
   applyFilter(): void {
-    this.errorMessage = '';
     if (this.reportForm.invalid) {
-      this.errorMessage = 'Please select both From and To dates.';
+      this.snackBar.open('Please select valid date range', 'Close', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
       return;
     }
 
-    const { from, to, status } = this.reportForm.value;
-    
-    const start = this.datePipe.transform(from, 'yyyy-MM-dd');
-    const end = this.datePipe.transform(to, 'yyyy-MM-dd');
+    this.currentPage = 0;
+    this.loadReportData();
+  }
+
+  private loadReportData(): void {
+    const formValues = this.reportForm.value;
+    const startDate = this.formatDate(formValues.startDate);
+    const endDate = this.formatDate(formValues.endDate);
+    const status = formValues.status || undefined;
 
     this.isLoading = true;
-    this.applicationService.getFilteredApplications(start!, end!, status, this.currentPage, this.pageSize).subscribe({
-      next: res => {
-        this.filteredData = res.data;
-        this.totalItems = res.total;
-        this.pages = res.pages;
+    this.error = '';
+
+    this.applicationService.getFilteredApplications(
+      startDate,
+      endDate,
+      status,
+      this.currentPage + 1, // Backend uses 1-based pagination
+      this.pageSize
+    ).subscribe({
+      next: (response: PaginatedResponse) => {
+        this.dataSource.data = response.data;
+        this.totalItems = response.total;
+        this.calculateSummaryStats(response.data, response.total);
         this.isLoading = false;
       },
-      error: err => {
+      error: (error) => {
+        console.error('Error loading report data:', error);
+        this.error = 'Failed to load report data';
         this.isLoading = false;
-        console.error('Error:', err);
+        this.snackBar.open('Failed to load report data', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
       }
     });
   }
 
-  onPageChange(event: PageEvent): void {
-    this.currentPage = event.pageIndex + 1; // PageEvent uses 0-based indexing, convert to 1-based
-    this.pageSize = event.pageSize;
-    this.applyFilter();
+  onPageChange(event: any): void {
+    const pageEvent = event as PageEvent;
+    this.currentPage = pageEvent.pageIndex;
+    this.pageSize = pageEvent.pageSize;
+    this.loadReportData();
+  }
+
+  private calculateSummaryStats(applications: LoanApplication[], total: number): void {
+    this.summaryStats = {
+      totalApplications: total,
+      totalAmount: applications.reduce((sum, app) => sum + (app.amount || 0), 0),
+      avgAmount: applications.length > 0 
+        ? applications.reduce((sum, app) => sum + (app.amount || 0), 0) / applications.length
+        : 0,
+      statusBreakdown: applications.reduce((breakdown, app) => {
+        breakdown[app.status] = (breakdown[app.status] || 0) + 1;
+        return breakdown;
+      }, {} as Record<string, number>)
+    };
+  }
+
+  // Export methods
+  exportToPDF(): void {
+    this.exportReport('pdf');
   }
 
   exportToExcel(): void {
-    const worksheet = XLSX.utils.json_to_sheet(
-      this.dataSource.filteredData.map(row => ({
-        Applicant: `${row.main_applicant?.first_name} ${row.main_applicant?.last_name}`,
-        Amount: row.amount,
-        Security: row.security,
-        Status: row.status,
-        Date: row.application_date
-      }))
-    );
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Report');
-    XLSX.writeFile(workbook, 'loan_report.xlsx');
+    this.exportReport('excel');
   }
-  
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'FUNDED': return 'status-funded';
-      case 'DECLINED': return 'status-declined';
-      default: return 'status-applied';
+
+  private exportReport(format: 'pdf' | 'excel'): void {
+    if (this.reportForm.invalid) {
+      this.snackBar.open('Please select valid date range before exporting', 'Close', {
+        duration: 3000
+      });
+      return;
     }
-  }
-  
 
-  exportToPDF(): void {
-    const doc = new jsPDF();
-    const rows = this.dataSource.filteredData.map(row => [
-      `${row.main_applicant?.first_name} ${row.main_applicant?.last_name}`,
-      row.amount,
-      row.security,
-      row.status,
-      new Date(row.application_date).toLocaleDateString()
-    ]);
+    const formValues = this.reportForm.value;
+    const startDate = this.formatDate(formValues.startDate);
+    const endDate = this.formatDate(formValues.endDate);
+    const status = formValues.status || undefined;
 
-    autoTable(doc, {
-      head: [['Applicant', 'Amount', 'Security', 'Status', 'Date']],
-      body: rows
+    this.isExporting = true;
+
+    this.applicationService.downloadReport(format, startDate, endDate, status).subscribe({
+      next: (blob) => {
+        this.downloadBlob(blob, format);
+        this.isExporting = false;
+        this.snackBar.open(`${format.toUpperCase()} report downloaded successfully`, 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar']
+        });
+      },
+      error: (error) => {
+        console.error('Export error:', error);
+        this.isExporting = false;
+        this.snackBar.open(`Failed to export ${format.toUpperCase()} report`, 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
     });
+  }
 
-    doc.save('loan_report.pdf');
+  private downloadBlob(blob: Blob, format: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `loan-applications-report-${timestamp}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+    link.download = filename;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  // Utility methods
+  private formatDate(date: Date): string {
+    return date.toISOString().split('T')[0];
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-CA', {
+      style: 'currency',
+      currency: 'CAD'
+    }).format(amount);
+  }
+
+  formatDate2(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('en-CA', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  getStatusClass(status: string): string {
+    const statusClasses: Record<string, string> = {
+      'APPLIED': 'status-applied',
+      'APPROVED': 'status-approved',
+      'FUNDED': 'status-funded', 
+      'DECLINED': 'status-declined'
+    };
+    return statusClasses[status] || 'status-default';
+  }
+
+  clearFilters(): void {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    
+    this.reportForm.patchValue({
+      startDate: startDate,
+      endDate: endDate,
+      status: ''
+    });
+    
+    this.applyFilter();
+  }
+
+  // Quick filter presets
+  setDateRange(days: number): void {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    this.reportForm.patchValue({
+      startDate: startDate,
+      endDate: endDate
+    });
+    
+    this.applyFilter();
+  }
+
+  setCurrentMonth(): void {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    
+    this.reportForm.patchValue({
+      startDate: startDate,
+      endDate: endDate
+    });
+    
+    this.applyFilter();
+  }
+
+  setPreviousMonth(): void {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+    
+    this.reportForm.patchValue({
+      startDate: startDate,
+      endDate: endDate
+    });
+    
+    this.applyFilter();
+  }
+
+  // Validation helpers
+  isDateRangeValid(): boolean {
+    const { startDate, endDate } = this.reportForm.value;
+    return startDate && endDate && startDate <= endDate;
+  }
+
+  getDateRangeError(): string {
+    const { startDate, endDate } = this.reportForm.value;
+    if (!startDate || !endDate) return 'Both dates are required';
+    if (startDate > endDate) return 'Start date must be before end date';
+    return '';
+  }
+
+  // Summary calculations
+  getStatusPercentage(status: string): number {
+    const count = this.summaryStats.statusBreakdown[status] || 0;
+    return this.summaryStats.totalApplications > 0 
+      ? (count / this.summaryStats.totalApplications) * 100 
+      : 0;
+  }
+
+  get hasData(): boolean {
+    return this.dataSource.data.length > 0;
+  }
+
+  get dateRangeText(): string {
+    const { startDate, endDate } = this.reportForm.value;
+    if (startDate && endDate) {
+      return `${this.formatDate2(startDate)} - ${this.formatDate2(endDate)}`;
+    }
+    return '';
   }
 }
