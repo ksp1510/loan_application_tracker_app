@@ -1,3 +1,19 @@
+"""
+application_routes.py
+---------------------
+HTTP routes for the Loan Application Tracker backend.
+
+This module is intentionally thin: it validates & parses request inputs,
+delegates business logic to the service layer, and shapes HTTP responses.
+
+Conventions used:
+- All DB access is done through the ApplicationService (service layer).
+- Use Annotated[... , Depends/Query/File] to satisfy Ruff rule B008.
+- Non-default parameters must appear before defaulted ones.
+- Keep responses JSON-serializable; ObjectIds are stringified in the service.
+"""
+
+
 import io
 from datetime import datetime
 from typing import Annotated, Optional
@@ -15,11 +31,28 @@ from app.utils.file_handler import S3_BUCKET, download_file, s3_client
 from app.utils.helpers import serialize_document
 from app.utils.reports.generator import generate_excel_report, generate_pdf_report
 
-router = APIRouter()
+# ---- Router setup -----------------------------------------------------------
+
+router = APIRouter(prefix="", tags=["Applications"])
+
+
+
+# =============================================================================
+# Applications — CRUD & Queries
+# =============================================================================
 
 
 @router.get("/applications")
 async def get_all_applications(status: Optional[str] = None) -> list[dict]:
+    """
+    List applications, optionally filtered by `status`.
+
+    Query Params:
+        status: Optional status filter (e.g., "APPLIED", "FUNDED").
+
+    Returns:
+        A list of serialized application documents.
+    """
     return await application_service.get_applications(status=status)
 
 
@@ -27,24 +60,62 @@ async def get_all_applications(status: Optional[str] = None) -> list[dict]:
 async def get_application_by_name(
     first_name: str = Query(...), last_name: str = Query(...)
 ) -> dict:
+    """
+    Find a single application by applicant name (case-insensitive, prefix match).
+
+    Raises:
+        HTTPException 404 if no document matches.
+    """
     return await application_service.get_application_by_name(first_name, last_name)
 
 
 @router.post("/applications")
 async def create_application(application: LoanApplicationBase) -> dict:
+    """
+    Create a new application.
+
+    Body:
+        application: A JSON object compatible with LoanApplicationBase schema.
+
+    Returns:
+        {"id": "<inserted_id>"}
+    """
     return await application_service.create_application(application)
 
 
 @router.put("/applications/{app_id}")
 @router.patch("/applications/{app_id}")
 async def update_application(app_id: str, application_update: LoanApplicationUpdate) -> dict:
+    """
+    Update an existing application.
+
+    Path:
+        app_id: Application ObjectId as string.
+
+    Body:
+        Partial fields to update.
+
+    Raises:
+        HTTPException 404 if document not found.
+    """
     return await application_service.update_application(app_id, application_update)
 
+
+# =============================================================================
+# File Uploads — Single & Multi-Type
+# =============================================================================
 
 @router.post("/applications/{id}/upload")
 async def upload_file(
     id: str, file: UploadFile = File(...), file_type: FileType = Query(...)
 ) -> dict:
+    """
+    Upload a single file for a given application.
+
+    Notes:
+        - DB dependency (`db`) comes before defaulted params to avoid syntax issues.
+        - Uses enum `FileType` for validation & Swagger dropdown.
+    """
     return await application_service.upload_application_file(id, file, file_type)
 
 
@@ -60,6 +131,19 @@ async def upload_multi_type_files(
     pay_stub: Optional[UploadFile] = File(None),
     photo_id: Optional[UploadFile] = File(None),
 ) -> dict:
+    """
+    Upload multiple *typed* files in a single request.
+
+    Body (multipart/form-data):
+        Any subset of the file fields above.
+
+    Returns:
+        {"uploaded": {"contract": {...}, "proof_of_address": {...}, ...}}
+
+    Implementation detail:
+        We build a `files_map` and pass it to the service; the service
+        validates MIME, builds S3 keys, and uploads.
+    """
     raw_map = {
         FileType.contract: contract,
         FileType.proof_of_address: proof_of_address,
@@ -76,12 +160,24 @@ async def upload_multi_type_files(
     return await application_service.upload_multiple_files(id, files_map)
 
 
+
+
+# =============================================================================
+# File Download & Listing
+# =============================================================================
+
 @router.get("/applications/{id}/download", response_class=StreamingResponse)
 async def download_application_file(
     id: str,
     file_type: FileType = Query(...),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> StreamingResponse:
+    """
+    Stream a file from S3 back to the client.
+
+    Returns:
+        StreamingResponse with proper Content-Type and filename.
+    """
     application = await db.applications.find_one({"_id": ObjectId(id)})
     first = application.get("main_applicant", {}).get("first_name", "unknown")
     last = application.get("main_applicant", {}).get("last_name", "unknown")
@@ -95,6 +191,12 @@ async def download_application_file(
 async def list_files(
     application_id: str, 
     db: AsyncIOMotorDatabase = Depends(get_db)) -> list[str]:
+    """
+    List logical file names for a given application.
+
+    Returns:
+        A list of user-facing file labels (e.g., ["contract.pdf", "proof_of_address.pdf"]).
+    """
     try:
         # Get applicant names from DB
         application = await db.applications.find_one({"_id": ObjectId(application_id)})
@@ -119,6 +221,12 @@ async def list_files(
         raise HTTPException(status_code=500, detail=f"Error listing S3 files: {str(e)}") from e
 
 
+
+
+# =============================================================================
+# Reporting
+# =============================================================================
+
 @router.get("/report")
 async def get_filtered_applications(
     db: AsyncIOMotorDatabase = Depends(get_db),
@@ -128,6 +236,23 @@ async def get_filtered_applications(
     page: int = 1,
     page_size: int = 10
 ) -> dict:
+    """
+    Paginated report of applications filtered by status and/or date range.
+
+    Query Params:
+        page, page_size: Pagination controls.
+        status: Optional status filter.
+        start_date, end_date: ISO8601 strings (inclusive range) applied on `application_date`.
+
+    Returns:
+        {
+          "data": [...],
+          "total": <int>,
+          "page": <int>,
+          "page_size": <int>,
+          "pages": <int>
+        }
+    """
     skip = (page - 1) * page_size
     limit = page_size
 
@@ -162,6 +287,16 @@ async def download_report(
     status: Optional[str] = None,
     format: str = "pdf"
 ) -> StreamingResponse:
+    """
+    Generate & download a report (PDF/Excel).
+
+    Query Params:
+        format: "pdf" | "excel"
+        status, start_date, end_date: Optional filters.
+
+    Returns:
+        StreamingResponse with the generated file.
+    """
     if format not in ["pdf", "excel"]:
         raise HTTPException(status_code=400, detail="Invalid format. Use 'pdf' or 'excel'.")
 
