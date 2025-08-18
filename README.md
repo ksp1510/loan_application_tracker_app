@@ -32,20 +32,21 @@ Includes file storage on **AWS S3** and reporting features in **PDF/Excel**.
 
 loan_application_tracker_app/
 │
-├── frontend/ # Angular UI for application tracker
-│ ├── src/app/components/ # Dashboard, Form, Reports, etc.
-│ ├── src/app/services/ # Application & File Upload Services
-│ └── ...
+├── frontend/                     # Angular UI for application tracker
+│   ├── src/app/components/       # Dashboard, Form, Reports, etc.
+│   ├── src/app/services/         # Application & File Upload Services
+│   └── ...
 │
-├── backend/ # FastAPI backend
-│ ├── app/
-│ │ ├── main.py # API entrypoint
-│ │ ├── routes/ # API endpoints
-│ │ ├── services/ # Business logic (service layer)
-│ │ ├── models/ # Pydantic models
-│ │ ├── utils/ # DB client, file handling, reports
-│ │ └── constants.py # Enum-like constants
-│ └── docs/ # Dev docs (API, Styleguide, etc.)
+├── backend/                      # FastAPI backend
+│   ├── app/
+│   │   ├── main.py               # API entrypoint
+│   │   ├── routes/               # API endpoints
+│   │   ├── services/             # Business logic (service layer)
+│   │   ├── models/               # Pydantic models
+│   │   ├── utils/                # DB client, file handling, reports
+│   │   └── constants.py          # Enum-like constants
+│   └── docs/                     # Dev docs (API, Styleguide, etc.)
+
 
 
 ---
