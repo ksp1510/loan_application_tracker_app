@@ -1,5 +1,25 @@
 /* add-application.component.css */
 
+.application-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+mat-card {
+  margin-bottom: 16px;
+  padding: 16px;
+}
+
+button {
+  margin-top: 20px;
+}
+
+
 .form-container {
   max-width: 1000px;
   margin: auto;

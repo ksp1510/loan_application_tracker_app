@@ -6,13 +6,15 @@
 
       <!-- Application Summary Fields -->
       <div class="summary-row form-row">
-        <mat-form-field class="half-width" appearance="fill" [class.invalid-field]="isInvalid('amount')">
+        <mat-form-field class="half-width" appearance="fill" [class.invalid-field]="isFieldInvalid('amount')">
           <mat-label>Requested Loan Amount</mat-label>
           <input matInput formControlName="amount" type="number">
-          <mat-error *ngIf="isInvalid('amount')">Loan amount is required</mat-error>
+          @if (isFieldInvalid('amount')) {
+            <mat-error>Loan amount is required</mat-error>
+          }
         </mat-form-field>
 
-        <mat-form-field class="half-width" appearance="fill" [class.invalid-field]="isInvalid('security')">
+        <mat-form-field class="half-width" appearance="fill" [class.invalid-field]="isFieldInvalid('security')">
           <mat-label>Security</mat-label>
           <mat-select formControlName="security">
             <mat-option value="Vehicle">Vehicle</mat-option>
@@ -20,17 +22,21 @@
             <mat-option value="Co-Signer">Co-Signer</mat-option>
             <mat-option value="N/A">N/A</mat-option>
           </mat-select>
-          <mat-error *ngIf="isInvalid('security')">Security is required</mat-error>
+          @if (isFieldInvalid('security')) {
+            <mat-error>Security is required</mat-error>
+          }
         </mat-form-field>
 
-        <mat-form-field class="half-width" appearance="fill" [class.invalid-field]="isInvalid('status')">
+        <mat-form-field class="half-width" appearance="fill" [class.invalid-field]="isFieldInvalid('status')">
           <mat-label>Status</mat-label>
           <mat-select formControlName="status">
             <mat-option value="APPLIED">Applied</mat-option>
             <mat-option value="FUNDED">Funded</mat-option>
             <mat-option value="DECLINED">Declined</mat-option>
           </mat-select>
-          <mat-error *ngIf="isInvalid('status')">Status is required</mat-error>
+          @if (isFieldInvalid('status')) {
+            <mat-error>Status is required</mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field class="full-width" appearance="fill">
@@ -47,10 +53,12 @@
 
       <!-- Toggle Co-Applicant -->
       <mat-slide-toggle formControlName="hasCoApplicant">Add Co-Applicant</mat-slide-toggle>
-      <div class="section-card" *ngIf="applicationForm.get('hasCoApplicant')?.value" [@formFadeIn]>
-        <h3 class="section-title">Co-Applicant</h3>
-        <app-applicant-form [formGroup]="$any(applicationForm.get('co_applicant'))"></app-applicant-form>
-      </div>
+      @if (applicationForm.get('hasCoApplicant')?.value) {
+        <div class="section-card" [@formFadeIn]>
+          <h3 class="section-title">Co-Applicant</h3>
+          <app-applicant-form [formGroup]="$any(applicationForm.get('co_applicant'))"></app-applicant-form>
+        </div>
+      }
 
       <!-- Income Section -->
       <div class="section-card">
@@ -78,7 +86,7 @@
           </mat-form-field>
           <mat-form-field appearance="fill">
             <mat-label>Total</mat-label>
-            <input matInput [value]="totalIncome" disabled>
+            <input matInput [value]="getTotalIncome('main')" disabled>
           </mat-form-field>
         </div>
       </div>
@@ -121,7 +129,7 @@
           </mat-form-field>
           <mat-form-field appearance="fill">
             <mat-label>Total</mat-label>
-            <input matInput [value]="totalExpenses" disabled>
+            <input matInput [value]="getTotalExpenses('main')" disabled>
           </mat-form-field>
         </div>
       </div>
@@ -130,17 +138,19 @@
       <div class="section-card">
         <h3 class="section-title">Existing Loans</h3>
         <div formArrayName="loan">
-          <div *ngFor="let loan of loanFormArray.controls; let i = index" [formGroupName]="i">
-            <mat-form-field appearance="fill">
-              <mat-label>Institution</mat-label>
-              <input matInput formControlName="financial_institution">
-            </mat-form-field>
-            <mat-form-field appearance="fill">
-              <mat-label>Monthly Payment</mat-label>
-              <input matInput formControlName="monthly_pymnt" type="number">
-            </mat-form-field>
-          </div>
-          <button mat-button color="accent" (click)="addLoan()">Add Another Loan</button>
+          @for (loan of mainApplicantLoans.controls; track loan; let i = $index) {
+            <div [formGroupName]="i">
+              <mat-form-field appearance="fill">
+                <mat-label>Institution</mat-label>
+                <input matInput formControlName="financial_institution">
+              </mat-form-field>
+              <mat-form-field appearance="fill">
+                <mat-label>Monthly Payment</mat-label>
+                <input matInput formControlName="monthly_pymnt" type="number">
+              </mat-form-field>
+            </div>
+          }
+          <button mat-button color="accent" (click)="addLoan('main')">Add Another Loan</button>
         </div>
       </div>
 
