@@ -1,12 +1,10 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { trigger, style, transition, animate } from '@angular/animations';
 import { MaterialModule } from '../../shared/material.module';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
 import { ApplicationService } from '../../services/application.service';
+import { ApplicantFormComponent } from '../applicant-form/applicant-form.component';
 
 // Custom Validators
 function canadianPostalCodeValidator(control: AbstractControl) {
@@ -31,30 +29,12 @@ function canadianPhoneValidator(control: AbstractControl) {
   templateUrl: './add-application.component.html',
   styleUrls: ['./add-application.component.css'],
   imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MaterialModule
-  ],
-  animations: [
-    trigger('slideIn', [
-      transition(':enter', [
-        style({ transform: 'translateX(-100%)', opacity: 0 }),
-        animate('300ms ease-in', style({ transform: 'translateX(0%)', opacity: 1 }))
-      ])
-    ]),
-    trigger('fadeIn', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(20px)' }),
-        animate('400ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ])
-  ],
+    MaterialModule,
+    ApplicantFormComponent
+  ]
 })
 export class AddApplicationComponent implements OnInit {
   applicationForm!: FormGroup;
-  currentStep = 0;
-  totalSteps = 5;
-  
   isSubmitting = false;
   showCoApplicant = false;
   
@@ -112,7 +92,25 @@ export class AddApplicationComponent implements OnInit {
       
       // Co-Applicant (optional)
       co_applicant: this.createApplicantFormGroup(),
-      hasCoApplicant: [false]
+      hasCoApplicant: [false],
+
+      // Income and expenses (moved to main level)
+      ft_income: [0, [Validators.min(0)]],
+      pt_income: [0, [Validators.min(0)]],
+      child_tax: [0, [Validators.min(0)]],
+      govt_support: [0, [Validators.min(0)]],
+      pension: [0, [Validators.min(0)]],
+      utilities: [0, [Validators.min(0)]],
+      property_taxes: [0, [Validators.min(0)]],
+      child_support: [0, [Validators.min(0)]],
+      groceries: [0, [Validators.min(0)]],
+      car_insurence: [0, [Validators.min(0)]],
+      car_payment: [0, [Validators.min(0)]],
+      phone_bill: [0, [Validators.min(0)]],
+      internet: [0, [Validators.min(0)]],
+      
+      // Existing Loans
+      loan: this.fb.array([])
     });
 
     // Watch co-applicant toggle
@@ -178,30 +176,7 @@ export class AddApplicationComponent implements OnInit {
         year: ['', [Validators.min(1900), Validators.max(new Date().getFullYear() + 1)]],
         make: [''],
         model: ['']
-      }),
-      
-      // Financial Information
-      monthly_income: this.fb.group({
-        ft_income: [0, [Validators.min(0)]],
-        pt_income: [0, [Validators.min(0)]],
-        child_tax: [0, [Validators.min(0)]],
-        govt_support: [0, [Validators.min(0)]],
-        pension: [0, [Validators.min(0)]]
-      }),
-      
-      monthly_expenses: this.fb.group({
-        utilities: [0, [Validators.min(0)]],
-        property_taxes: [0, [Validators.min(0)]],
-        child_support: [0, [Validators.min(0)]],
-        groceries: [0, [Validators.min(0)]],
-        car_insurence: [0, [Validators.min(0)]],
-        car_payment: [0, [Validators.min(0)]],
-        phone_bill: [0, [Validators.min(0)]],
-        internet: [0, [Validators.min(0)]]
-      }),
-      
-      // Existing Loans
-      loan: this.fb.array([])
+      })
     });
   }
 
@@ -260,151 +235,46 @@ export class AddApplicationComponent implements OnInit {
 
   // Loan array management
   get mainApplicantLoans(): FormArray {
-    return this.applicationForm.get('main_applicant.loan') as FormArray;
+    return this.applicationForm.get('loan') as FormArray;
   }
 
-  get coApplicantLoans(): FormArray {
-    return this.applicationForm.get('co_applicant.loan') as FormArray;
-  }
-
-  addLoan(applicantType: 'main' | 'co'): void {
+  addLoan(applicantType: 'main'): void {
     const loanGroup = this.fb.group({
       financial_institution: ['', Validators.required],
       monthly_pymnt: [0, [Validators.required, Validators.min(1)]]
     });
 
-    if (applicantType === 'main') {
-      this.mainApplicantLoans.push(loanGroup);
-    } else {
-      this.coApplicantLoans.push(loanGroup);
-    }
+    this.mainApplicantLoans.push(loanGroup);
   }
 
-  removeLoan(applicantType: 'main' | 'co', index: number): void {
-    if (applicantType === 'main') {
-      this.mainApplicantLoans.removeAt(index);
-    } else {
-      this.coApplicantLoans.removeAt(index);
-    }
+  removeLoan(index: number): void {
+    this.mainApplicantLoans.removeAt(index);
   }
 
   // Financial calculations
-  getTotalIncome(applicantType: 'main' | 'co'): number {
-    const incomeGroup = this.applicationForm.get(`${applicantType}_applicant.monthly_income`)?.value;
-    if (!incomeGroup) return 0;
-    
-    return Object.values(incomeGroup).reduce((sum: number, value: any) => sum + (+value || 0), 0);
+  getTotalIncome(applicantType: 'main'): number {
+    const form = this.applicationForm.value;
+    return (form.ft_income || 0) + 
+           (form.pt_income || 0) + 
+           (form.child_tax || 0) + 
+           (form.govt_support || 0) + 
+           (form.pension || 0);
   }
 
-  getTotalExpenses(applicantType: 'main' | 'co'): number {
-    const expensesGroup = this.applicationForm.get(`${applicantType}_applicant.monthly_expenses`)?.value;
-    if (!expensesGroup) return 0;
-    
-    return Object.values(expensesGroup).reduce((sum: number, value: any) => sum + (+value || 0), 0);
+  getTotalExpenses(applicantType: 'main'): number {
+    const form = this.applicationForm.value;
+    return (form.utilities || 0) + 
+           (form.property_taxes || 0) + 
+           (form.child_support || 0) + 
+           (form.groceries || 0) + 
+           (form.car_insurence || 0) + 
+           (form.car_payment || 0) + 
+           (form.phone_bill || 0) + 
+           (form.internet || 0);
   }
 
-  getNetIncome(applicantType: 'main' | 'co'): number {
+  getNetIncome(applicantType: 'main'): number {
     return this.getTotalIncome(applicantType) - this.getTotalExpenses(applicantType);
-  }
-
-  // Step navigation
-  nextStep(): void {
-    if (this.currentStep < this.totalSteps - 1) {
-      if (this.isCurrentStepValid()) {
-        this.currentStep++;
-      } else {
-        this.markCurrentStepAsTouched();
-        this.snackBar.open('Please fill in all required fields before proceeding', 'Close', {
-          duration: 3000,
-          panelClass: ['error-snackbar']
-        });
-      }
-    }
-  }
-
-  previousStep(): void {
-    if (this.currentStep > 0) {
-      this.currentStep--;
-    }
-  }
-
-  goToStep(step: number): void {
-    if (step >= 0 && step < this.totalSteps) {
-      this.currentStep = step;
-    }
-  }
-
-  private isCurrentStepValid(): boolean {
-    switch (this.currentStep) {
-      case 0: // Application Overview
-        return (this.applicationForm.get('amount')?.valid ?? false) && 
-               (this.applicationForm.get('security')?.valid ?? false) &&
-               (this.applicationForm.get('status')?.valid ?? false);
-      
-      case 1: // Main Applicant Personal Info
-        const mainPersonal = ['main_applicant.first_name', 'main_applicant.last_name', 
-                             'main_applicant.date_of_birth', 'main_applicant.SIN',
-                             'main_applicant.email', 'main_applicant.cell_phone',
-                             'main_applicant.marital_status', 'main_applicant.status_in_canada'];
-        return mainPersonal.every(field => this.applicationForm.get(field)?.valid);
-      
-      case 2: // Address & Employment
-        const addressFields = ['main_applicant.address.street', 'main_applicant.address.city',
-                              'main_applicant.address.province', 'main_applicant.address.postal_code'];
-        return addressFields.every(field => this.applicationForm.get(field)?.valid);
-      
-      case 3: // Financial Information
-        return true; // Financial info is optional for basic validation
-      
-      case 4: // Co-Applicant
-        if (!this.showCoApplicant) return true;
-        const coPersonal = ['co_applicant.first_name', 'co_applicant.last_name',
-                           'co_applicant.date_of_birth', 'co_applicant.SIN',
-                           'co_applicant.email', 'co_applicant.cell_phone'];
-        return coPersonal.every(field => this.applicationForm.get(field)?.valid);
-      
-      default:
-        return true;
-    }
-  }
-
-  private markCurrentStepAsTouched(): void {
-    switch (this.currentStep) {
-      case 0:
-        ['amount', 'security', 'status'].forEach(field => {
-          this.applicationForm.get(field)?.markAsTouched();
-        });
-        break;
-      
-      case 1:
-        const mainPersonal = ['main_applicant.first_name', 'main_applicant.last_name', 
-                             'main_applicant.date_of_birth', 'main_applicant.SIN',
-                             'main_applicant.email', 'main_applicant.cell_phone',
-                             'main_applicant.marital_status', 'main_applicant.status_in_canada'];
-        mainPersonal.forEach(field => {
-          this.applicationForm.get(field)?.markAsTouched();
-        });
-        break;
-      
-      case 2:
-        const addressFields = ['main_applicant.address.street', 'main_applicant.address.city',
-                              'main_applicant.address.province', 'main_applicant.address.postal_code'];
-        addressFields.forEach(field => {
-          this.applicationForm.get(field)?.markAsTouched();
-        });
-        break;
-      
-      case 4:
-        if (this.showCoApplicant) {
-          const coPersonal = ['co_applicant.first_name', 'co_applicant.last_name',
-                             'co_applicant.date_of_birth', 'co_applicant.SIN',
-                             'co_applicant.email', 'co_applicant.cell_phone'];
-          coPersonal.forEach(field => {
-            this.applicationForm.get(field)?.markAsTouched();
-          });
-        }
-        break;
-    }
   }
 
   // Form submission
@@ -415,21 +285,13 @@ export class AddApplicationComponent implements OnInit {
         duration: 5000,
         panelClass: ['error-snackbar']
       });
-      
-      // Find first invalid step and navigate to it
-      for (let step = 0; step < this.totalSteps; step++) {
-        this.currentStep = step;
-        if (!this.isCurrentStepValid()) {
-          break;
-        }
-      }
       return;
     }
 
     this.isSubmitting = true;
     
     // Prepare data for submission
-    const formData = this.applicationForm.value;
+    const formData = { ...this.applicationForm.value };
     
     // Remove co_applicant if not needed
     if (!formData.hasCoApplicant) {
@@ -438,11 +300,8 @@ export class AddApplicationComponent implements OnInit {
     delete formData.hasCoApplicant;
 
     // Clean up empty loans
-    if (formData.main_applicant.loan.length === 0) {
-      delete formData.main_applicant.loan;
-    }
-    if (formData.co_applicant?.loan?.length === 0) {
-      delete formData.co_applicant.loan;
+    if (!formData.loan || formData.loan.length === 0) {
+      delete formData.loan;
     }
 
     this.applicationService.createApplication(formData).subscribe({
@@ -493,26 +352,6 @@ export class AddApplicationComponent implements OnInit {
       style: 'currency',
       currency: 'CAD'
     }).format(amount);
-  }
-
-  // Progress calculation
-  get progressPercentage(): number {
-    return ((this.currentStep + 1) / this.totalSteps) * 100;
-  }
-
-  get stepTitle(): string {
-    const titles = [
-      'Application Overview',
-      'Main Applicant - Personal Information',
-      'Main Applicant - Address & Employment',
-      'Financial Information',
-      'Co-Applicant Information'
-    ];
-    return titles[this.currentStep] || '';
-  }
-
-  get canProceed(): boolean {
-    return this.isCurrentStepValid();
   }
 
   // Cancel and navigation

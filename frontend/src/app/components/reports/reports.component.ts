@@ -5,25 +5,16 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpClient } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatIconModule } from '@angular/material/icon';
 import { MaterialModule } from '../../shared/material.module';
 
 import { ApplicationService, LoanApplication, PaginatedResponse } from '../../services/application.service';
 
 @Component({
-    selector: 'app-reports',
-    templateUrl: './reports.component.html',
-    styleUrls: ['./reports.component.css'],
-    standalone: true,
-    imports: [
-      MaterialModule
-    ]
+  selector: 'app-reports',
+  templateUrl: './reports.component.html',
+  styleUrls: ['./reports.component.css'],
+  standalone: true,
+  imports: [MaterialModule]
 })
 export class ReportsComponent implements OnInit {
   reportForm!: FormGroup;
@@ -71,18 +62,25 @@ export class ReportsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    //this.loadInitialData();
     this.loadSummary();
+    this.loadInitialData();
   }
 
   loadSummary(): void {
-    this.http.get<any>('api/summaryStats').subscribe(data => {
-      this.summaryStats = data;
-      this.applicationStatuses = Object.keys(this.summaryStats.statusBreakdown);
-    });
+    // Mock summary data for now
+    this.summaryStats = {
+      totalApplications: 0,
+      totalAmount: 0,
+      avgAmount: 0,
+      statusBreakdown: {
+        'APPLIED': 0,
+        'APPROVED': 0,
+        'FUNDED': 0,
+        'DECLINED': 0
+      }
+    };
   }
   
-
   private initializeForm(): void {
     // Set default date range (last 30 days)
     const endDate = new Date();
@@ -127,7 +125,7 @@ export class ReportsComponent implements OnInit {
       startDate,
       endDate,
       status,
-      this.currentPage + 1, // Backend uses 1-based pagination
+      this.currentPage + 1,
       this.pageSize
     ).subscribe({
       next: (response: PaginatedResponse) => {
@@ -148,10 +146,9 @@ export class ReportsComponent implements OnInit {
     });
   }
 
-  onPageChange(event: any): void {
-    const pageEvent = event as PageEvent;
-    this.currentPage = pageEvent.pageIndex;
-    this.pageSize = pageEvent.pageSize;
+  onPageChange(event: PageEvent): void {
+    this.currentPage = event.pageIndex;
+    this.pageSize = event.pageSize;
     this.loadReportData();
   }
 
