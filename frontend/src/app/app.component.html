@@ -1,1 +1,27 @@
-<router-outlet></router-outlet>
+<!-- app.component.html -->
+<div class="app-container">
+    <!-- Navigation Header -->
+    <mat-toolbar color="primary" class="app-toolbar">
+      <span class="app-title">Loan Management System</span>
+      <span class="spacer"></span>
+      <nav class="nav-links">
+        <a mat-button routerLink="/dashboard" routerLinkActive="active-link">
+          <mat-icon>dashboard</mat-icon>
+          Dashboard
+        </a>
+        <a mat-button routerLink="/add-application" routerLinkActive="active-link">
+          <mat-icon>add</mat-icon>
+          New Application
+        </a>
+        <a mat-button routerLink="/reports" routerLinkActive="active-link">
+          <mat-icon>analytics</mat-icon>
+          Reports
+        </a>
+      </nav>
+    </mat-toolbar>
+  
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>

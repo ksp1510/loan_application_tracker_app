@@ -1,5 +1,5 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+// app.routes.ts
+import { Routes } from '@angular/router';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ApplicationDetailsComponent } from './components/application-details/application-details.component';
 import { ReportsComponent } from './components/reports/reports.component';
@@ -10,11 +10,6 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent },
   { path: 'application/:id', component: ApplicationDetailsComponent },
   { path: 'reports', component: ReportsComponent },
-  { path: 'add-application', component: AddApplicationComponent }
+  { path: 'add-application', component: AddApplicationComponent },
+  { path: '**', redirectTo: '/dashboard' } // Wildcard route for 404s
 ];
-
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
-})
-export class AppRoutingModule {}

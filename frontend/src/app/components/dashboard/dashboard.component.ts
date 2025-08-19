@@ -18,13 +18,11 @@ interface SummaryCard {
 }
 
 @Component({
-    selector: 'app-dashboard',
-    templateUrl: './dashboard.component.html',
-    styleUrls: ['./dashboard.component.css'],
-    standalone: true,
-    imports: [
-      MaterialModule
-    ]
+  selector: 'app-dashboard',
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.css'],
+  standalone: true,
+  imports: [MaterialModule]
 })
 export class DashboardComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [
@@ -89,8 +87,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
+    if (this.paginator) {
+      this.dataSource.paginator = this.paginator;
+    }
+    if (this.sort) {
+      this.dataSource.sort = this.sort;
+    }
     
     // Custom filter predicate for complex searching
     this.dataSource.filterPredicate = (data: LoanApplication, filter: string) => {
@@ -164,7 +166,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   editApplication(id: string): void {
-    this.router.navigate(['/application', id, 'edit']);
+    this.router.navigate(['/application', id]);
   }
 
   addNewApplication(): void {
@@ -225,7 +227,6 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   // Export current filtered data
   exportData(): void {
     const filteredData = this.dataSource.filteredData;
-    // This would typically trigger a download or open export dialog
     console.log('Exporting data:', filteredData);
     this.snackBar.open('Export functionality coming soon', 'Close', {
       duration: 3000
