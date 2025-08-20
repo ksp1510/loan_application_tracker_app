@@ -1,46 +1,50 @@
 <div class="application-details-container">
-    <!-- Header -->
-    <div class="header-section">
-      <button mat-icon-button (click)="goBack()" class="back-button">
-        <mat-icon>arrow_back</mat-icon>
-      </button>
-      <h1 class="page-title">Application Details</h1>
-      <div class="header-actions">
-        <button 
-          mat-raised-button 
-          color="primary" 
-          (click)="isEditing = !isEditing"
-          *ngIf="!isEditing"
-        >
+  <!-- Header -->
+  <div class="header-section">
+    <button mat-icon-button (click)="goBack()" class="back-button">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="page-title">Application Details</h1>
+    <!--<div class="header-actions">
+      @if (!isEditing) {
+        <button mat-raised-button color="primary" (click)="isEditing = !isEditing">
           <mat-icon>edit</mat-icon>
           Edit
         </button>
-        <div *ngIf="isEditing" class="edit-actions">
+      }
+      @if (isEditing) {
+        <div class="edit-actions">
           <button mat-button (click)="cancelEdit()">Cancel</button>
           <button mat-raised-button color="primary" (click)="saveChanges()">
             <mat-icon>save</mat-icon>
             Save Changes
           </button>
         </div>
-      </div>
-    </div>
-  
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-container">
+      }
+    </div>-->
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="loading-container">
       <mat-spinner diameter="50"></mat-spinner>
       <p>Loading application details...</p>
     </div>
-  
-    <!-- Error State -->
-    <mat-card *ngIf="error && !isLoading" class="error-card">
+  }
+
+  <!-- Error State -->
+  @if (error && !isLoading) {
+    <mat-card class="error-card">
       <mat-icon color="warn">error</mat-icon>
       <span>{{ error }}</span>
       <button mat-button color="primary" (click)="loadApplication()">Retry</button>
     </mat-card>
-  
-    <!-- Main Content -->
-    <div *ngIf="application && !isLoading" class="content-grid">
-      
+  }
+
+  <!-- Main Content -->
+  @if (application && !isLoading) {
+    <div class="content-grid">
+
       <!-- Application Overview -->
       <mat-card class="overview-card">
         <mat-card-header>
@@ -50,7 +54,8 @@
           </mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <div class="overview-grid" *ngIf="!isEditing">
+          @if (!isEditing) {
+          <div class="overview-grid">
             <div class="overview-item">
               <span class="label">Application ID</span>
               <span class="value">{{ application._id }}</span>
@@ -59,8 +64,7 @@
               <span class="label">Status</span>
               <mat-chip 
                 class="status-chip" 
-                [style.background-color]="getStatusColor(application.status)"
-              >
+                [style.background-color]="getStatusColor(application.status)">
                 {{ application.status }}
               </mat-chip>
             </div>
@@ -77,76 +81,29 @@
               <span class="value">{{ formatDate(application.application_date) }}</span>
             </div>
           </div>
-  
-          <!-- Edit Form -->
-          <form [formGroup]="editForm" *ngIf="isEditing" class="edit-form">
-            <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>Status</mat-label>
-                <mat-select formControlName="status">
-                  <mat-option 
-                    *ngFor="let status of statusOptions" 
-                    [value]="status.value"
-                  >
-                    {{ status.label }}
-                  </mat-option>
-                </mat-select>
-                <mat-error *ngIf="isFieldInvalid('status')">
-                  {{ getFieldError('status') }}
-                </mat-error>
-              </mat-form-field>
-  
-              <mat-form-field appearance="outline">
-                <mat-label>Loan Amount</mat-label>
-                <input matInput type="number" formControlName="amount">
-                <span matPrefix>$</span>
-                <mat-error *ngIf="isFieldInvalid('amount')">
-                  {{ getFieldError('amount') }}
-                </mat-error>
-              </mat-form-field>
-  
-              <mat-form-field appearance="outline">
-                <mat-label>Security</mat-label>
-                <mat-select formControlName="security">
-                  <mat-option 
-                    *ngFor="let security of securityOptions" 
-                    [value]="security.value"
-                  >
-                    {{ security.label }}
-                  </mat-option>
-                </mat-select>
-                <mat-error *ngIf="isFieldInvalid('security')">
-                  {{ getFieldError('security') }}
-                </mat-error>
-              </mat-form-field>
-            </div>
-  
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Notes</mat-label>
-              <textarea matInput formControlName="notes" rows="3"></textarea>
-            </mat-form-field>
-  
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Reason</mat-label>
-              <textarea matInput formControlName="reason" rows="2"></textarea>
-            </mat-form-field>
-          </form>
-  
+          }
+
           <!-- Notes Display (Read-only) -->
-          <div *ngIf="!isEditing && (application.notes || application.reason)" class="notes-section">
-            <div *ngIf="application.notes" class="note-item">
+          @if (!isEditing && (application.notes || application.reason)) {
+          <div class="notes-section">
+            @if (application.notes) {
+            <div class="note-item">
               <span class="note-label">Notes:</span>
               <p class="note-content">{{ application.notes }}</p>
             </div>
-            <div *ngIf="application.reason" class="note-item">
+            }
+            @if (application.reason) {
+            <div class="note-item">
               <span class="note-label">Reason:</span>
               <p class="note-content">{{ application.reason }}</p>
             </div>
+            }
           </div>
+          }
         </mat-card-content>
       </mat-card>
-  
-      <!-- Applicant Information -->
+
+      <!-- Main Applicant -->
       <mat-card class="applicant-card">
         <mat-card-header>
           <mat-card-title>
@@ -156,94 +113,136 @@
         </mat-card-header>
         <mat-card-content>
           <div class="applicant-grid">
+            <!-- Personal Info -->
             <div class="info-section">
               <h4>Personal Information</h4>
               <div class="info-grid">
-                <div class="info-item">
-                  <span class="label">Name</span>
-                  <span class="value">
-                    {{ application.main_applicant.first_name }} 
-                    {{ application.main_applicant.last_name }}
-                  </span>
-                </div>
-                <div class="info-item">
-                  <span class="label">Email</span>
-                  <span class="value">{{ application.main_applicant.email }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">Phone</span>
-                  <span class="value">{{ application.main_applicant.cell_phone }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">Date of Birth</span>
-                  <span class="value">{{ application.main_applicant.date_of_birth }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">SIN</span>
-                  <span class="value">{{ application.main_applicant.SIN }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">Marital Status</span>
-                  <span class="value">{{ application.main_applicant.marital_status }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">Dependents</span>
-                  <span class="value">{{ application.main_applicant.dependents }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">Status in Canada</span>
-                  <span class="value">{{ application.main_applicant.status_in_canada }}</span>
-                </div>
+                <div class="info-item"><span class="label">Name</span><span class="value">{{ application.main_applicant.first_name }} {{ application.main_applicant.last_name }}</span></div>
+                <div class="info-item"><span class="label">Email</span><span class="value">{{ application.main_applicant.email }}</span></div>
+                <div class="info-item"><span class="label">Phone</span><span class="value">{{ application.main_applicant.cell_phone }}</span></div>
+                <div class="info-item"><span class="label">DOB</span><span class="value">{{ application.main_applicant.date_of_birth }}</span></div>
+                <div class="info-item"><span class="label">SIN</span><span class="value">{{ application.main_applicant.SIN }}</span></div>
+                <div class="info-item"><span class="label">Marital Status</span><span class="value">{{ application.main_applicant.marital_status }}</span></div>
+                <div class="info-item"><span class="label">Dependents</span><span class="value">{{ application.main_applicant.dependents }}</span></div>
+                <div class="info-item"><span class="label">Status in Canada</span><span class="value">{{ application.main_applicant.status_in_canada }}</span></div>
               </div>
             </div>
-  
-            <div class="info-section" *ngIf="application.main_applicant.address">
+
+            <!-- Address -->
+            @if (application.main_applicant.address) {
+            <div class="info-section">
               <h4>Address</h4>
               <div class="address-block">
                 <p>{{ application.main_applicant.address.street }}</p>
-                <p>
-                  {{ application.main_applicant.address.city }}, 
-                  {{ application.main_applicant.address.province }}
-                </p>
+                <p>{{ application.main_applicant.address.city }}, {{ application.main_applicant.address.province }}</p>
                 <p>{{ application.main_applicant.address.postal_code }}</p>
               </div>
               <div class="info-grid">
-                <div class="info-item">
-                  <span class="label">Monthly Rent</span>
-                  <span class="value">{{ formatCurrency(application.main_applicant.rent) }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">Duration at Address</span>
-                  <span class="value">{{ application.main_applicant.duration_at_address }} months</span>
-                </div>
+                <div class="info-item"><span class="label">Monthly Rent</span><span class="value">{{ formatCurrency(application.main_applicant.address.rent) }}</span></div>
+                <div class="info-item"><span class="label">Duration</span><span class="value">{{ application.main_applicant.address.duration_at_address }} months</span></div>
               </div>
             </div>
-  
-            <div class="info-section" *ngIf="application.main_applicant.ft_employment">
+            }
+
+            <!-- Employment -->
+            @if (application.main_applicant.employment) {
+            <div class="info-section">
               <h4>Employment</h4>
               <div class="info-grid">
-                <div class="info-item">
-                  <span class="label">Company</span>
-                  <span class="value">{{ application.main_applicant.ft_employment.company_name }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">Position</span>
-                  <span class="value">{{ application.main_applicant.ft_employment.position }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">Length of Service</span>
-                  <span class="value">{{ application.main_applicant.ft_employment.length_of_service }} months</span>
-                </div>
-                <div class="info-item">
-                  <span class="label">Gross Income</span>
-                  <span class="value">{{ formatCurrency(application.main_applicant.ft_employment.gross_income) }}</span>
-                </div>
+                <div class="info-item"><span class="label">Company</span><span class="value">{{ application.main_applicant.employment.company_name }}</span></div>
+                <div class="info-item"><span class="label">Position</span><span class="value">{{ application.main_applicant.employment.position }}</span></div>
+                <div class="info-item"><span class="label">Service</span><span class="value">{{ application.main_applicant.employment.length_of_service }} months</span></div>
+                <div class="info-item"><span class="label">Gross Income</span><span class="value">{{ formatCurrency(application.main_applicant.employment.gross_income) }}</span></div>
               </div>
             </div>
+            }
+
+            <!-- Vehicle -->
+            @if (application.main_applicant.vehicle1) {
+            <div class="info-section">
+              <h4>Vehicle 1</h4>
+              <div class="info-grid">
+                <div class="info-item"><span class="label">Year</span><span class="value">{{ application.main_applicant.vehicle1.year }}</span></div>
+                <div class="info-item"><span class="label">Make</span><span class="value">{{ application.main_applicant.vehicle1.make }}</span></div>
+                <div class="info-item"><span class="label">Model</span><span class="value">{{ application.main_applicant.vehicle1.model }}</span></div>
+              </div>
+            </div>
+            }
+
+            <!-- Vehicle 2 -->
+            @if (application.main_applicant.vehicle2) {
+            <div class="info-section">
+              <h4>Vehicle 2</h4>
+              <div class="info-grid">
+                <div class="info-item"><span class="label">Year</span><span class="value">{{ application.main_applicant.vehicle2.year }}</span></div>
+                <div class="info-item"><span class="label">Make</span><span class="value">{{ application.main_applicant.vehicle2.make }}</span></div>
+                <div class="info-item"><span class="label">Model</span><span class="value">{{ application.main_applicant.vehicle2.model }}</span></div>
+              </div>
+            </div>
+            }
           </div>
         </mat-card-content>
       </mat-card>
-  
+
+      <!-- Co-Applicant -->
+      @if (application.co_applicant) {
+      <mat-card class="applicant-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon class="section-icon">people</mat-icon>
+            Co-Applicant
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="applicant-grid">
+            <!-- Personal Info -->
+            <div class="info-section">
+              <h4>Personal Information</h4>
+              <div class="info-grid">
+                <div class="info-item"><span class="label">Name</span><span class="value">{{ application.co_applicant.first_name }} {{ application.co_applicant.last_name }}</span></div>
+                <div class="info-item"><span class="label">Email</span><span class="value">{{ application.co_applicant.email }}</span></div>
+                <div class="info-item"><span class="label">Phone</span><span class="value">{{ application.co_applicant.cell_phone }}</span></div>
+                <div class="info-item"><span class="label">DOB</span><span class="value">{{ application.co_applicant.date_of_birth }}</span></div>
+                <div class="info-item"><span class="label">SIN</span><span class="value">{{ application.co_applicant.SIN }}</span></div>
+                <div class="info-item"><span class="label">Marital Status</span><span class="value">{{ application.co_applicant.marital_status }}</span></div>
+                <div class="info-item"><span class="label">Dependents</span><span class="value">{{ application.co_applicant.dependents }}</span></div>
+                <div class="info-item"><span class="label">Status in Canada</span><span class="value">{{ application.co_applicant.status_in_canada }}</span></div>
+              </div>
+            </div>
+
+            <!-- Address -->
+            @if (application.co_applicant.address) {
+            <div class="info-section">
+              <h4>Address</h4>
+              <div class="address-block">
+                <p>{{ application.co_applicant.address.street }}</p>
+                <p>{{ application.co_applicant.address.city }}, {{ application.co_applicant.address.province }}</p>
+                <p>{{ application.co_applicant.address.postal_code }}</p>
+              </div>
+              <div class="info-grid">
+                <div class="info-item"><span class="label">Monthly Rent</span><span class="value">{{ formatCurrency(application.co_applicant.address.rent) }}</span></div>
+                <div class="info-item"><span class="label">Duration</span><span class="value">{{ application.co_applicant.address.duration_at_address }} months</span></div>
+              </div>
+            </div>
+            }
+
+            <!-- Employment -->
+            @if (application.co_applicant.employment) {
+            <div class="info-section">
+              <h4>Employment</h4>
+              <div class="info-grid">
+                <div class="info-item"><span class="label">Company</span><span class="value">{{ application.co_applicant.employment.company_name }}</span></div>
+                <div class="info-item"><span class="label">Position</span><span class="value">{{ application.co_applicant.employment.position }}</span></div>
+                <div class="info-item"><span class="label">Service</span><span class="value">{{ application.co_applicant.employment.length_of_service }} months</span></div>
+                <div class="info-item"><span class="label">Gross Income</span><span class="value">{{ formatCurrency(application.co_applicant.employment.gross_income) }}</span></div>
+              </div>
+            </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+      }
+
       <!-- Financial Summary -->
       <mat-card class="financial-card">
         <mat-card-header>
@@ -254,39 +253,289 @@
         </mat-card-header>
         <mat-card-content>
           <div class="financial-grid">
+            <!-- Income -->
             <div class="financial-section income">
               <h4>Monthly Income</h4>
               <div class="financial-items">
-                <div class="financial-item" *ngIf="application.main_applicant.monthly_income.ft_income">
-                  <span>Full-time Income</span>
-                  <span>{{ formatCurrency(application.main_applicant.monthly_income.ft_income) }}</span>
-                </div>
-                <div class="financial-item" *ngIf="application.main_applicant.monthly_income.pt_income">
-                  <span>Part-time Income</span>
-                  <span>{{ formatCurrency(application.main_applicant.monthly_income.pt_income) }}</span>
-                </div>
-                <div class="financial-item" *ngIf="application.main_applicant.monthly_income.child_tax">
-                  <span>Child Tax</span>
-                  <span>{{ formatCurrency(application.main_applicant.monthly_income.child_tax) }}</span>
-                </div>
-                <div class="financial-item" *ngIf="application.main_applicant.monthly_income.govt_support">
-                  <span>Government Support</span>
-                  <span>{{ formatCurrency(application.main_applicant.monthly_income.govt_support) }}</span>
-                </div>
-                <div class="financial-item" *ngIf="application.main_applicant.monthly_income.pension">
-                  <span>Pension</span>
-                  <span>{{ formatCurrency(application.main_applicant.monthly_income.pension) }}</span>
-                </div>
+                @if (application.main_applicant.monthly_income.ft_income) {
+                <div><span>Full-time</span><span>{{ formatCurrency(application.main_applicant.monthly_income.ft_income) }}</span></div>
+                }
+                @if (application.main_applicant.monthly_income.pt_income) {
+                <div><span>Part-time</span><span>{{ formatCurrency(application.main_applicant.monthly_income.pt_income) }}</span></div>
+                }
+                @if (application.main_applicant.monthly_income.child_tax) {
+                <div><span>Child Tax</span><span>{{ formatCurrency(application.main_applicant.monthly_income.child_tax) }}</span></div>
+                }
+                @if (application.main_applicant.monthly_income.govt_support) {
+                <div><span>Govt Support</span><span>{{ formatCurrency(application.main_applicant.monthly_income.govt_support) }}</span></div>
+                }
+                @if (application.main_applicant.monthly_income.pension) {
+                <div><span>Pension</span><span>{{ formatCurrency(application.main_applicant.monthly_income.pension) }}</span></div>
+                }
+                @if (application.main_applicant.monthly_income.other_income) {
+                <div><span>Other Income</span><span>{{ formatCurrency(application.main_applicant.monthly_income.other_income) }}</span></div>
+                }
                 <div class="financial-total">
                   <span>Total Income</span>
                   <span class="total-amount">{{ formatCurrency(getTotalIncome()) }}</span>
                 </div>
               </div>
             </div>
-  
+
+            <!-- Expenses -->
             <div class="financial-section expenses">
               <h4>Monthly Expenses</h4>
               <div class="financial-items">
-                <div class="financial-item" *ngIf="application.main_applicant.monthly_expenses.utilities">
-                  <span>Utilities</span>
-                  <span>{{ formatCurrency(application.main_applicant.monthly_expenses.utilities) }}</span>
+                @if (application.main_applicant.monthly_expenses.utilities) {
+                <div><span>Utilities</span><span>{{ formatCurrency(application.main_applicant.monthly_expenses.utilities) }}</span></div>
+                }
+                @if (application.main_applicant.monthly_expenses.property_taxs) {
+                <div><span>Property Taxes</span><span>{{ formatCurrency(application.main_applicant.monthly_expenses.property_taxs) }}</span></div>
+                }
+                @if (application.main_applicant.monthly_expenses.child_support) {
+                <div><span>Child Support</span><span>{{ formatCurrency(application.main_applicant.monthly_expenses.child_support) }}</span></div>
+                }
+                @if (application.main_applicant.monthly_expenses.groceries) {
+                <div><span>Groceries</span><span>{{ formatCurrency(application.main_applicant.monthly_expenses.groceries) }}</span></div>
+                }
+                @if (application.main_applicant.monthly_expenses.car_insurence) {
+                <div><span>Car Insurance</span><span>{{ formatCurrency(application.main_applicant.monthly_expenses.car_insurence) }}</span></div>
+                }
+                @if (application.main_applicant.monthly_expenses.car_payment) {
+                <div><span>Car Payment</span><span>{{ formatCurrency(application.main_applicant.monthly_expenses.car_payment) }}</span></div>
+                }
+                @if (application.main_applicant.monthly_expenses.phone_bill) {
+                <div><span>Phone Bill</span><span>{{ formatCurrency(application.main_applicant.monthly_expenses.phone_bill) }}</span></div>
+                }
+                @if (application.main_applicant.monthly_expenses.internet) {
+                <div><span>Internet</span><span>{{ formatCurrency(application.main_applicant.monthly_expenses.internet) }}</span></div>
+                }
+                <div class="financial-total">
+                  <span>Total Expenses</span>
+                  <span class="total-amount">{{ formatCurrency(getTotalExpenses()) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      <!-- ================== EDIT FORM ================== -->
+      <form [formGroup]="editForm" *ngIf="isEditing" class="edit-form">
+
+        <!-- Overview -->
+        <mat-card class="overview-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon class="section-icon">assignment</mat-icon>
+              Application Overview
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Status</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option *ngFor="let status of statusOptions" [value]="status.value">
+                    {{ status.label }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Loan Amount</mat-label>
+                <input matInput type="number" formControlName="amount">
+                <span matPrefix>$</span>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Security</mat-label>
+                <mat-select formControlName="security">
+                  <mat-option *ngFor="let sec of securityOptions" [value]="sec.value">
+                    {{ sec.label }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Notes</mat-label>
+                <textarea matInput formControlName="notes" rows="3"></textarea>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Reason</mat-label>
+                <textarea matInput formControlName="reason" rows="2"></textarea>
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Main Applicant -->
+          <mat-card class="applicant-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon class="section-icon">person</mat-icon>
+                Main Applicant
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content formGroupName="main_applicant">
+              <h4>Personal Information</h4>
+              <div class="form-row">
+                <mat-form-field appearance="outline"><mat-label>First Name</mat-label>
+                  <input matInput formControlName="first_name">
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Last Name</mat-label>
+                  <input matInput formControlName="last_name">
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Email</mat-label>
+                  <input matInput type="email" formControlName="email">
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Phone</mat-label>
+                  <input matInput formControlName="cell_phone">
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>DOB</mat-label>
+                  <input matInput type="date" formControlName="date_of_birth">
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>SIN</mat-label>
+                  <input matInput formControlName="SIN">
+                </mat-form-field>
+              </div>
+
+              <h4>Address</h4>
+              <div formGroupName="address" class="form-row">
+                <mat-form-field appearance="outline"><mat-label>Street</mat-label>
+                  <input matInput formControlName="street">
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>City</mat-label>
+                  <input matInput formControlName="city">
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Province</mat-label>
+                  <input matInput formControlName="province">
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Postal Code</mat-label>
+                  <input matInput formControlName="postal_code">
+                </mat-form-field>
+              </div>
+              <div class="form-row">
+                <mat-form-field appearance="outline"><mat-label>Rent</mat-label>
+                  <input matInput type="number" formControlName="rent">
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Duration (months)</mat-label>
+                  <input matInput type="number" formControlName="duration_at_address">
+                </mat-form-field>
+              </div>
+
+              <h4>Employment</h4>
+              <div formGroupName="employment" class="form-row">
+                <mat-form-field appearance="outline"><mat-label>Company</mat-label>
+                  <input matInput formControlName="company_name">
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Position</mat-label>
+                  <input matInput formControlName="position">
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Length of Service</mat-label>
+                  <input matInput type="number" formControlName="length_of_service">
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Gross Income</mat-label>
+                  <input matInput type="number" formControlName="gross_income">
+                </mat-form-field>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Co-Applicant -->
+          <mat-card class="applicant-card" formGroupName="co_applicant">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon class="section-icon">people</mat-icon>
+                Co-Applicant
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <h4>Personal Information</h4>
+            <div class="form-row">
+              <mat-form-field appearance="outline"><mat-label>First Name</mat-label>
+                <input matInput formControlName="first_name">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Last Name</mat-label>
+                <input matInput formControlName="last_name">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Email</mat-label>
+                <input matInput type="email" formControlName="email">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Phone</mat-label>
+                <input matInput formControlName="cell_phone">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>DOB</mat-label>
+                <input matInput type="date" formControlName="date_of_birth">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>SIN</mat-label>
+                <input matInput formControlName="SIN">
+              </mat-form-field>
+            </div>
+
+            <h4>Address</h4>
+            <div formGroupName="address" class="form-row">
+              <mat-form-field appearance="outline"><mat-label>Street</mat-label>
+                <input matInput formControlName="street">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>City</mat-label>
+                <input matInput formControlName="city">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Province</mat-label>
+                <input matInput formControlName="province">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Postal Code</mat-label>
+                <input matInput formControlName="postal_code">
+              </mat-form-field>
+            </div>
+
+            <h4>Employment</h4>
+            <div formGroupName="employment" class="form-row">
+              <mat-form-field appearance="outline"><mat-label>Company</mat-label>
+                <input matInput formControlName="company_name">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Position</mat-label>
+                <input matInput formControlName="position">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Length of Service</mat-label>
+                <input matInput type="number" formControlName="length_of_service">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Gross Income</mat-label>
+                <input matInput type="number" formControlName="gross_income">
+              </mat-form-field>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Financial Summary -->
+        <mat-card class="financial-card" formGroupName="financials">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon class="section-icon">account_balance</mat-icon>
+              Financial Summary
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="form-row">
+              <mat-form-field appearance="outline"><mat-label>Utilities</mat-label>
+                <input matInput type="number" formControlName="utilities">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Groceries</mat-label>
+                <input matInput type="number" formControlName="groceries">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Car Insurance</mat-label>
+                <input matInput type="number" formControlName="car_insurence">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Phone Bill</mat-label>
+                <input matInput type="number" formControlName="phone_bill">
+              </mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Internet</mat-label>
+                <input matInput type="number" formControlName="internet">
+              </mat-form-field>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </form>
+    </div>
+  }
+</div>

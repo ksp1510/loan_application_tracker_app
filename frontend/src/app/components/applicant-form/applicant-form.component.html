@@ -7,9 +7,9 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>First Name</mat-label>
           <input matInput formControlName="first_name">
-          <mat-error *ngIf="isFieldInvalid('first_name')">
-            {{ getFieldError('first_name') }}
-          </mat-error>
+          @if (isFieldInvalid('first_name')) {
+            <mat-error>{{ getFieldError('first_name') }}</mat-error>
+          }
         </mat-form-field>
   
         <mat-form-field appearance="outline" class="form-field">
@@ -20,9 +20,9 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Last Name</mat-label>
           <input matInput formControlName="last_name">
-          <mat-error *ngIf="isFieldInvalid('last_name')">
-            {{ getFieldError('last_name') }}
-          </mat-error>
+          @if (isFieldInvalid('last_name')) {
+            <mat-error>{{ getFieldError('last_name') }}</mat-error>
+          }
         </mat-form-field>
       </div>
   
@@ -32,25 +32,25 @@
           <input matInput [matDatepicker]="dobPicker" formControlName="date_of_birth">
           <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
           <mat-datepicker #dobPicker></mat-datepicker>
-          <mat-error *ngIf="isFieldInvalid('date_of_birth')">
-            {{ getFieldError('date_of_birth') }}
-          </mat-error>
+          @if (isFieldInvalid('date_of_birth')) {
+            <mat-error>{{ getFieldError('date_of_birth') }}</mat-error>
+          }
         </mat-form-field>
   
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>SIN</mat-label>
           <input matInput formControlName="SIN" placeholder="123-456-789">
-          <mat-error *ngIf="isFieldInvalid('SIN')">
-            {{ getFieldError('SIN') }}
-          </mat-error>
+          @if (isFieldInvalid('SIN')) {
+            <mat-error>{{ getFieldError('SIN') }}</mat-error>
+          }
         </mat-form-field>
   
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Email</mat-label>
           <input matInput type="email" formControlName="email">
-          <mat-error *ngIf="isFieldInvalid('email')">
-            {{ getFieldError('email') }}
-          </mat-error>
+          @if (isFieldInvalid('email')) {
+            <mat-error>{{ getFieldError('email') }}</mat-error>
+          }
         </mat-form-field>
       </div>
   
@@ -58,9 +58,9 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Cell Phone</mat-label>
           <input matInput formControlName="cell_phone" placeholder="(123) 456-7890">
-          <mat-error *ngIf="isFieldInvalid('cell_phone')">
-            {{ getFieldError('cell_phone') }}
-          </mat-error>
+          @if (isFieldInvalid('cell_phone')) {
+            <mat-error>{{ getFieldError('cell_phone') }}</mat-error>
+          }
         </mat-form-field>
   
         <mat-form-field appearance="outline" class="form-field">
@@ -70,9 +70,9 @@
               {{ status }}
             </mat-option>
           </mat-select>
-          <mat-error *ngIf="isFieldInvalid('marital_status')">
-            {{ getFieldError('marital_status') }}
-          </mat-error>
+          @if (isFieldInvalid('marital_status')) {
+            <mat-error>{{ getFieldError('marital_status') }}</mat-error>
+          }
         </mat-form-field>
   
         <mat-form-field appearance="outline" class="form-field">
@@ -88,9 +88,9 @@
             {{ status }}
           </mat-option>
         </mat-select>
-        <mat-error *ngIf="isFieldInvalid('status_in_canada')">
-          {{ getFieldError('status_in_canada') }}
-        </mat-error>
+        @if (isFieldInvalid('status_in_canada')) {
+          <mat-error>{{ getFieldError('status_in_canada') }}</mat-error>
+        }
       </mat-form-field>
     </div>
   
@@ -101,9 +101,9 @@
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Street Address</mat-label>
           <input matInput formControlName="street">
-          <mat-error *ngIf="isFieldInvalid('address.street')">
-            {{ getFieldError('address.street') }}
-          </mat-error>
+          @if (isFieldInvalid('address.street')) {
+            <mat-error>{{ getFieldError('address.street') }}</mat-error>
+          }
         </mat-form-field>
       </div>
   
@@ -111,9 +111,9 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>City</mat-label>
           <input matInput formControlName="city">
-          <mat-error *ngIf="isFieldInvalid('address.city')">
-            {{ getFieldError('address.city') }}
-          </mat-error>
+          @if (isFieldInvalid('address.city')) {
+            <mat-error>{{ getFieldError('address.city') }}</mat-error>
+          }
         </mat-form-field>
   
         <mat-form-field appearance="outline" class="form-field">
@@ -123,17 +123,17 @@
               {{ province }}
             </mat-option>
           </mat-select>
-          <mat-error *ngIf="isFieldInvalid('address.province')">
-            {{ getFieldError('address.province') }}
-          </mat-error>
+          @if (isFieldInvalid('address.province')) {
+            <mat-error>{{ getFieldError('address.province') }}</mat-error>
+          }
         </mat-form-field>
   
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Postal Code</mat-label>
           <input matInput formControlName="postal_code" placeholder="K1A 0A6">
-          <mat-error *ngIf="isFieldInvalid('address.postal_code')">
-            {{ getFieldError('address.postal_code') }}
-          </mat-error>
+          @if (isFieldInvalid('address.postal_code')) {
+            <mat-error>{{ getFieldError('address.postal_code') }}</mat-error>
+          }
         </mat-form-field>
       </div>
   
@@ -150,4 +150,47 @@
         </mat-form-field>
       </div>
     </div>
-  </div>
+
+    <!-- Employment Information -->
+    <div class="form-section" formGroupName="employment">
+      <h4>Employment Information</h4>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Company Name</mat-label>
+          <input matInput formControlName="company_name">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Position</mat-label>
+          <input matInput formControlName="position">
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Length of Service (months)</mat-label>
+          <input matInput type="number" formControlName="length_of_service">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Gross Monthly Income</mat-label>
+          <input matInput type="number" formControlName="gross_income">
+          <span matPrefix>$</span>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Company Address</mat-label>
+          <input matInput formControlName="company_address">
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Company Phone</mat-label>
+          <input matInput formControlName="company_phone">
+        </mat-form-field>
+      </div>
+    </div>
+</div>

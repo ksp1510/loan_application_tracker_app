@@ -2,6 +2,7 @@
 <div class="form-container">
   <mat-card class="form-card">
     <mat-card-title>Loan Application</mat-card-title>
+    @if (applicationForm) {
     <mat-card-content [formGroup]="applicationForm" [@formFadeIn]>
 
       <!-- Application Summary Fields -->
@@ -48,17 +49,24 @@
       <!-- Main Applicant Section -->
       <div class="section-card" [@formFadeIn]>
         <h3 class="section-title">Main Applicant</h3>
-        <app-applicant-form [formGroup]="$any(applicationForm.get('main_applicant'))"></app-applicant-form>
+        @if (mainApplicantGroup) {
+        <app-applicant-form [formGroup]="mainApplicantGroup">
+        </app-applicant-form>
+        }
       </div>
 
       <!-- Toggle Co-Applicant -->
       <mat-slide-toggle formControlName="hasCoApplicant">Add Co-Applicant</mat-slide-toggle>
-      @if (applicationForm.get('hasCoApplicant')?.value) {
+      @if (applicationForm.get('hasCoApplicant')?.value && coApplicantGroup) {
         <div class="section-card" [@formFadeIn]>
-          <h3 class="section-title">Co-Applicant</h3>
-          <app-applicant-form [formGroup]="$any(applicationForm.get('co_applicant'))"></app-applicant-form>
-        </div>
+        <h3 class="section-title">Co-Applicant</h3>
+        <app-applicant-form [formGroup]="coApplicantGroup">
+        </app-applicant-form>
+      </div>
       }
+      
+
+
 
       <!-- Income Section -->
       <div class="section-card">
@@ -72,6 +80,8 @@
             <mat-label>Part Time Income</mat-label>
             <input matInput formControlName="pt_income" type="number">
           </mat-form-field>
+        </div>
+        <div class="form-row">
           <mat-form-field appearance="fill">
             <mat-label>Child Tax</mat-label>
             <input matInput formControlName="child_tax" type="number">
@@ -80,12 +90,21 @@
             <mat-label>Govt Support</mat-label>
             <input matInput formControlName="govt_support" type="number">
           </mat-form-field>
+        </div>
+        <div class="form-row">
           <mat-form-field appearance="fill">
             <mat-label>Pension</mat-label>
             <input matInput formControlName="pension" type="number">
           </mat-form-field>
           <mat-form-field appearance="fill">
-            <mat-label>Total</mat-label>
+            <mat-label>Other Income</mat-label>
+            <input matInput formControlName="other_income" type="number">
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row">
+          <mat-form-field appearance="fill">
+            <mat-label>Total Income</mat-label>
             <input matInput [value]="getTotalIncome('main')" disabled>
           </mat-form-field>
         </div>
@@ -103,6 +122,8 @@
             <mat-label>Property Taxes</mat-label>
             <input matInput formControlName="property_taxes" type="number">
           </mat-form-field>
+        </div>
+        <div class="form-row">
           <mat-form-field appearance="fill">
             <mat-label>Child Support</mat-label>
             <input matInput formControlName="child_support" type="number">
@@ -111,6 +132,8 @@
             <mat-label>Groceries</mat-label>
             <input matInput formControlName="groceries" type="number">
           </mat-form-field>
+        </div>
+        <div class="form-row">
           <mat-form-field appearance="fill">
             <mat-label>Car Insurance</mat-label>
             <input matInput formControlName="car_insurence" type="number">
@@ -119,6 +142,8 @@
             <mat-label>Car Payment</mat-label>
             <input matInput formControlName="car_payment" type="number">
           </mat-form-field>
+        </div>
+        <div class="form-row">
           <mat-form-field appearance="fill">
             <mat-label>Phone Bill</mat-label>
             <input matInput formControlName="phone_bill" type="number">
@@ -127,6 +152,8 @@
             <mat-label>Internet</mat-label>
             <input matInput formControlName="internet" type="number">
           </mat-form-field>
+        </div>
+        <div class="form-row">
           <mat-form-field appearance="fill">
             <mat-label>Total</mat-label>
             <input matInput [value]="getTotalExpenses('main')" disabled>
@@ -148,6 +175,9 @@
                 <mat-label>Monthly Payment</mat-label>
                 <input matInput formControlName="monthly_pymnt" type="number">
               </mat-form-field>
+              <button mat-icon-button color="warn" (click)="removeLoan('main', i)">
+                <mat-icon>-</mat-icon>
+              </button>
             </div>
           }
           <button mat-button color="accent" (click)="addLoan('main')">Add Another Loan</button>
@@ -162,5 +192,6 @@
       </div>
 
     </mat-card-content>
+    }
   </mat-card>
 </div>

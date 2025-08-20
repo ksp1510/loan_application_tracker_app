@@ -20,14 +20,14 @@ export class MockApplicationService {
           street: "123 Oak Rd",
           city: "Calgary",
           province: "AB",
-          postal_code: "T2P 3P4"
+          postal_code: "T2P 3P4",
+          rent: 0,
+          duration_at_address: 10,
         },
-        rent: 0,
-        duration_at_address: 10,
         marital_status: "Married",
         dependents: 1,
         status_in_canada: "Citizen",
-        ft_employment: {
+        employment: {
           company_name: "Innovate Marketing",
           position: "Director",
           length_of_service: 7,
@@ -47,7 +47,8 @@ export class MockApplicationService {
           pt_income: 0,
           child_tax: 200,
           govt_support: 0,
-          pension: 0
+          pension: 0,
+          other_income: 0
         },
         monthly_expenses: {
           utilities: 300,
@@ -72,14 +73,15 @@ export class MockApplicationService {
           street: "123 Oak Rd",
           city: "Calgary",
           province: "AB",
-          postal_code: "T2P 3P4"
-        },
-        rent: 0,
+          postal_code: "T2P 3P4",
+          rent: 0,
         duration_at_address: 10,
+        },
+        
         marital_status: "Married",
         dependents: 1,
         status_in_canada: "Citizen",
-        ft_employment: {
+        employment: {
           company_name: "Self-Employed",
           position: "Freelance Graphic Designer",
           length_of_service: 5,
@@ -99,7 +101,8 @@ export class MockApplicationService {
           pt_income: 0,
           child_tax: 200,
           govt_support: 0,
-          pension: 0
+          pension: 0,
+          other_income: 0
         },
         monthly_expenses: {
           utilities: 300,
@@ -138,14 +141,14 @@ export class MockApplicationService {
           street: "123 Main St",
           city: "Toronto",
           province: "ON",
-          postal_code: "M5H 2N2"
+          postal_code: "M5H 2N2",
+          rent: 1500,
+          duration_at_address: 5,
         },
-        rent: 1500,
-        duration_at_address: 5,
         marital_status: "Married",
         dependents: 2,
         status_in_canada: "Citizen",
-        ft_employment: {
+        employment: {
           company_name: "Tech Solutions Inc.",
           position: "Software Engineer",
           length_of_service: 4,
@@ -165,7 +168,8 @@ export class MockApplicationService {
           pt_income: 0,
           child_tax: 400,
           govt_support: 0,
-          pension: 0
+          pension: 0,
+          other_income: 0
         },
         monthly_expenses: {
           utilities: 200,
@@ -199,14 +203,14 @@ export class MockApplicationService {
           street: "123 Main St",
           city: "Toronto",
           province: "ON",
-          postal_code: "M5H 2N2"
+          postal_code: "M5H 2N2",
+          rent: 1500,
+          duration_at_address: 5,
         },
-        rent: 1500,
-        duration_at_address: 5,
         marital_status: "Married",
         dependents: 2,
         status_in_canada: "Permanent Resident",
-        ft_employment: {
+        employment: {
           company_name: "HealthCare Inc.",
           position: "Nurse",
           length_of_service: 6,
@@ -226,7 +230,8 @@ export class MockApplicationService {
           pt_income: 0,
           child_tax: 400,
           govt_support: 0,
-          pension: 0
+          pension: 0,
+          other_income: 0
         },
         monthly_expenses: {
           utilities: 200,
@@ -260,14 +265,14 @@ export class MockApplicationService {
           street: "456 Elm St",
           city: "Vancouver",
           province: "BC",
-          postal_code: "V6B 2W3"
+          postal_code: "V6B 2W3",
+          rent: 2000,
+          duration_at_address: 3,
         },
-        rent: 2000,
-        duration_at_address: 3,
         marital_status: "Single",
         dependents: 0,
         status_in_canada: "Citizen",
-        ft_employment: {
+        employment: {
           company_name: "TechNova Corp",
           position: "Product Manager",
           length_of_service: 5,
@@ -287,7 +292,8 @@ export class MockApplicationService {
           pt_income: 0,
           child_tax: 0,
           govt_support: 0,
-          pension: 0
+          pension: 0,
+          other_income: 0
         },
         monthly_expenses: {
           utilities: 250,
@@ -326,14 +332,14 @@ export class MockApplicationService {
           street: "123 Main St",
           city: "Toronto",
           province: "ON",
-          postal_code: "M5V 3E7"
+          postal_code: "M5V 3E7",
+          rent: 1200,
+          duration_at_address: 24,
         },
-        rent: 1200,
-        duration_at_address: 24,
         marital_status: "Single",
         dependents: 0,
         status_in_canada: "Citizen",
-        ft_employment: {
+        employment: {
           company_name: "Tech Corp",
           position: "Developer",
           length_of_service: 36,
@@ -342,7 +348,7 @@ export class MockApplicationService {
             street: "456 Tech Rd",
             city: "Toronto",
             province: "ON",
-            postal_code: "M4B 1B4"
+            postal_code: "M4B 1B4",
           },
           company_phone: "416-555-9876"
         },
@@ -353,7 +359,8 @@ export class MockApplicationService {
           pt_income: 500,
           child_tax: 0,
           govt_support: 0,
-          pension: 0
+          pension: 0,
+          other_income: 0
         },
         monthly_expenses: {
           utilities: 150,
@@ -392,14 +399,14 @@ export class MockApplicationService {
           street: "123 Main Street",
           city: "Toronto",
           province: "Ontario",
-          postal_code: "M4B1B3"
+          postal_code: "M4B1B3",
+          rent: 1200,
+          duration_at_address: 24,
         },
-        rent: 1200,
-        duration_at_address: 24,
         marital_status: "Single",
         dependents: 0,
         status_in_canada: "Citizen",
-        ft_employment: {
+        employment: {
           company_name: "TechCorp",
           position: "Engineer",
           length_of_service: 36,
@@ -408,7 +415,7 @@ export class MockApplicationService {
             street: "500 Tech Road",
             city: "Toronto",
             province: "Ontario",
-            postal_code: "M1B2K3"
+            postal_code: "M1B2K3",
           },
           company_phone: "4167654321"
         },
@@ -419,7 +426,8 @@ export class MockApplicationService {
           pt_income: 0,
           child_tax: 0,
           govt_support: 0,
-          pension: 0
+          pension: 0,
+          other_income: 0
         },
         monthly_expenses: {
           utilities: 200,
@@ -458,14 +466,14 @@ export class MockApplicationService {
           street: "123 Main St",
           city: "Toronto",
           province: "ON",
-          postal_code: "M1A1A1"
+          postal_code: "M1A1A1",
+          rent: 1200,
+          duration_at_address: 36,
         },
-        rent: 1200,
-        duration_at_address: 36,
         marital_status: "Single",
         dependents: 1,
         status_in_canada: "Permanent Resident",
-        ft_employment: {
+        employment: {
           company_name: "TechCorp",
           position: "Developer",
           length_of_service: 24,
@@ -474,7 +482,7 @@ export class MockApplicationService {
             street: "456 Tech Ave",
             city: "Toronto",
             province: "ON",
-            postal_code: "M1B2B2"
+            postal_code: "M1B2B2",
           },
           company_phone: "4169876543"
         },
@@ -485,7 +493,8 @@ export class MockApplicationService {
           pt_income: 0,
           child_tax: 0,
           govt_support: 0,
-          pension: 0
+          pension: 0,
+          other_income: 0
         },
         monthly_expenses: {
           utilities: 150,
@@ -524,14 +533,14 @@ export class MockApplicationService {
           street: "12 Maplewood Drive",
           city: "Toronto",
           province: "ON",
-          postal_code: "M5G 2K2"
+          postal_code: "M5G 2K2",
+          rent: 1800,
+          duration_at_address: 48,
         },
-        rent: 1800,
-        duration_at_address: 48,
         marital_status: "Married",
         dependents: 2,
         status_in_canada: "Permanent Resident",
-        ft_employment: {
+        employment: {
           company_name: "TechNova Solutions",
           position: "Software Engineer",
           length_of_service: 60,
@@ -540,7 +549,7 @@ export class MockApplicationService {
             street: "88 King Street",
             city: "Toronto",
             province: "ON",
-            postal_code: "M5C 1G3"
+            postal_code: "M5C 1G3",
           },
           company_phone: "416-555-7722"
         },
@@ -551,7 +560,8 @@ export class MockApplicationService {
           pt_income: 0,
           child_tax: 400,
           govt_support: 0,
-          pension: 0
+          pension: 0,
+          other_income: 0,
         },
         monthly_expenses: {
           utilities: 250,
@@ -576,14 +586,14 @@ export class MockApplicationService {
           street: "45 Bayview Ave",
           city: "Toronto",
           province: "ON",
-          postal_code: "M4N 3M3"
+          postal_code: "M4N 3M3",
+          rent: 1200,
+          duration_at_address: 3,
         },
-        rent: 1200,
-        duration_at_address: 3,
         marital_status: "Married",
         dependents: 1,
         status_in_canada: "Permanent Resident",
-        ft_employment: {
+        employment: {
           company_name: "BrightPath Education",
           position: "Teacher",
           length_of_service: 2,
@@ -603,7 +613,8 @@ export class MockApplicationService {
           pt_income: 0,
           child_tax: 0,
           govt_support: 0,
-          pension: 0
+          pension: 0,
+          other_income: 0
         },
         monthly_expenses: {
           utilities: 200,

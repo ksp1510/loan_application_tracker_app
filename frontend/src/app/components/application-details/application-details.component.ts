@@ -106,6 +106,7 @@ export class ApplicationDetailsComponent implements OnInit {
 
   private populateForm(application: LoanApplication): void {
     this.editForm.patchValue({
+      
       status: application.status,
       amount: application.amount,
       security: application.security,

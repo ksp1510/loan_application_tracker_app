@@ -100,6 +100,7 @@ export class AddApplicationComponent implements OnInit {
       child_tax: [0, [Validators.min(0)]],
       govt_support: [0, [Validators.min(0)]],
       pension: [0, [Validators.min(0)]],
+      other_income: [0, [Validators.min(0)]],
       utilities: [0, [Validators.min(0)]],
       property_taxes: [0, [Validators.min(0)]],
       child_support: [0, [Validators.min(0)]],
@@ -146,13 +147,14 @@ export class AddApplicationComponent implements OnInit {
         street: ['', Validators.required],
         city: ['', Validators.required],
         province: ['', Validators.required],
-        postal_code: ['', [Validators.required, canadianPostalCodeValidator]]
+        postal_code: ['', [Validators.required, canadianPostalCodeValidator]],
+        rent: [0, [Validators.required, Validators.min(0)]],
+        duration_at_address: [0, [Validators.required, Validators.min(0)]],
       }),
-      rent: [0, [Validators.required, Validators.min(0)]],
-      duration_at_address: [0, [Validators.required, Validators.min(0)]],
+      
       
       // Employment
-      ft_employment: this.fb.group({
+      employment: this.fb.group({
         company_name: [''],
         position: [''],
         length_of_service: [0, Validators.min(0)],
@@ -247,9 +249,10 @@ export class AddApplicationComponent implements OnInit {
     this.mainApplicantLoans.push(loanGroup);
   }
 
-  removeLoan(index: number): void {
+  removeLoan(applicantType: 'main', index: number) {
     this.mainApplicantLoans.removeAt(index);
   }
+  
 
   // Financial calculations
   getTotalIncome(applicantType: 'main'): number {
@@ -258,7 +261,8 @@ export class AddApplicationComponent implements OnInit {
            (form.pt_income || 0) + 
            (form.child_tax || 0) + 
            (form.govt_support || 0) + 
-           (form.pension || 0);
+           (form.pension || 0) + 
+           (form.other_income || 0);
   }
 
   getTotalExpenses(applicantType: 'main'): number {
@@ -371,4 +375,13 @@ export class AddApplicationComponent implements OnInit {
       duration: 3000
     });
   }
+
+  get mainApplicantGroup(): FormGroup {
+    return this.applicationForm.get('main_applicant') as FormGroup;
+  }
+  
+  get coApplicantGroup(): FormGroup {
+    return this.applicationForm.get('co_applicant') as FormGroup;
+  }
+  
 }

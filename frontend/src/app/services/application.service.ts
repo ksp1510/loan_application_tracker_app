@@ -3,64 +3,68 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export interface LoanApplication {
-  _id: string;
-  main_applicant: {
-    first_name: string;
-    last_name: string;
-    email: string;
-    cell_phone: string;
-    date_of_birth: string;
-    SIN: string;
-    address: {
+export interface Applicant {
+  first_name: string;
+  last_name: string;
+  email: string;
+  cell_phone: string;
+  date_of_birth: string;
+  SIN: string;
+  address: {
+    street: string;
+    city: string;
+    province: string;
+    postal_code: string;
+    rent: number;
+  duration_at_address: number;
+  };
+  
+  marital_status: string;
+  dependents: number;
+  status_in_canada: string;
+  employment?: {
+    company_name: string;
+    position: string;
+    length_of_service: number;
+    gross_income: number;
+    company_address: {
       street: string;
       city: string;
       province: string;
       postal_code: string;
     };
-    rent: number;
-    duration_at_address: number;
-    marital_status: string;
-    dependents: number;
-    status_in_canada: string;
-    ft_employment?: {
-      company_name: string;
-      position: string;
-      length_of_service: number;
-      gross_income: number;
-      company_address: {
-        street: string;
-        city: string;
-        province: string;
-        postal_code: string;
-      };
-      company_phone: string;
-    };
-    vehicle1?: { year: number; make: string; model: string };
-    vehicle2?: { year: number; make: string; model: string };
-    monthly_income: {
-      ft_income: number;
-      pt_income: number;
-      child_tax: number;
-      govt_support: number;
-      pension: number;
-    };
-    monthly_expenses: {
-      utilities: number;
-      property_taxs: number;
-      child_support: number;
-      groceries: number;
-      car_insurence: number;
-      car_payment: number;
-      phone_bill: number;
-      internet: number;
-    };
-    loan?: Array<{
-      financial_institution: string;
-      monthly_pymnt: number;
-    }>;
+    company_phone: string;
   };
-  co_applicant?: any;
+  vehicle1?: { year: number; make: string; model: string };
+  vehicle2?: { year: number; make: string; model: string };
+  monthly_income: {
+    ft_income: number;
+    pt_income: number;
+    child_tax: number;
+    govt_support: number;
+    pension: number;
+    other_income: number;
+  };
+  monthly_expenses: {
+    utilities: number;
+    property_taxs: number;
+    child_support: number;
+    groceries: number;
+    car_insurence: number;
+    car_payment: number;
+    phone_bill: number;
+    internet: number;
+  };
+  loan?: Array<{
+    financial_institution: string;
+    monthly_pymnt: number;
+  }>;
+}
+
+export interface LoanApplication {
+  _id: string;
+  main_applicant: Applicant;
+  co_applicant?: Applicant; // <-- strongly typed instead of `any`
   amount: number;
   security: 'Vehicle' | 'Property' | 'Co-Signer' | 'N/A';
   status: 'APPLIED' | 'APPROVED' | 'FUNDED' | 'DECLINED';
@@ -68,6 +72,7 @@ export interface LoanApplication {
   reason?: string;
   application_date: string;
 }
+
 
 export interface PaginatedResponse {
   data: LoanApplication[];
